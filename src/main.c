@@ -12,7 +12,9 @@ static void GPIO_Init() {
     GPIOD->ODR &= ~GPIO_ODR_OD13;
 }
 
-void SPI_Init(uint8_t SPI_PRESCALER = 2) {
+#define SPI_PRESCALER 2
+
+void SPI_Init() {
 	//// GPIO
     GPIO_Init();
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
