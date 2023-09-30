@@ -7,7 +7,7 @@ void MyDelay(uint32_t time) {
 	for (uint32_t t = 0; t < time; t++);
 }
 
-//SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi1;
 
 /* SPI1 init function */
 void MX_SPI1_Init(void)
@@ -61,7 +61,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     PA7     ------> SPI1_MOSI
     PB3     ------> SPI1_SCK
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Pin = /*GPIO_PIN_6;|*/GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -99,6 +99,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
   }
 }
 
+/*
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
@@ -119,6 +120,9 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+*/
+
+#if 0
 
 void MX_GPIO_Init(void)
 {
@@ -158,6 +162,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
+#endif
 #if 0
 static void GPIO_Init() {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
