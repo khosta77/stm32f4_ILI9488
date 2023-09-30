@@ -12,22 +12,27 @@ int main(void) {
     GPIOD->ODR |= GPIO_ODR_OD12;
     MX_SPI1_Init();
     GPIOD->ODR |= GPIO_ODR_OD13;
-    Lcd_Init();
+    ST7735_Init();
     GPIOD->ODR |= GPIO_ODR_OD14;
 	//lv_port_disp_init();
 	//lv_demo_benchmark(LV_DEMO_BENCHMARK_MODE_RENDER_AND_DRIVER);
+    uint8_t color = 0x00;
+    uint16_t colors[9] = {ST7735_BLACK, ST7735_BLUE, ST7735_RED, ST7735_GREEN, ST7735_CYAN, ST7735_MAGENTA, ST7735_YELLOW, ST7735_ORANGE, ST7735_LIGHTGREEN};
 
 	while(1) {
-        for (uint8_t y = 0; y < (LCD_H - 2); y++) {
-            for (uint8_t x = 0; x < (LCD_W - 2); x++) {
-                Lcd_DrawLine(0, 0, x, y);
-                //MyDelay(10000);
+        if (color == 9)
+            color = 0x00;
+        for (uint8_t y = 0; y < ST7735_HEIGHT; y++) {
+            for (uint8_t x = 0; x < ST7735_WIDTH; x++) {
+                ST7735_DrawPixel(x, y, colors[color]);
+                //MyDelay(10);
                 //GPIOD->ODR ^= GPIO_ODR_OD15;
             }
         }
-        while (1) {
-            GPIOD->ODR |= GPIO_ODR_OD15;
-        }
+        ++color;
+        //while (1) {
+          //  GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14);
+        //}
 	}
 }
 
