@@ -36,9 +36,9 @@ void MX_SPI1_Init(void) {
     // - SPI_CR1_MSTR - мастер мод
     // - SPI_CR1_SSM - Разрешает программное управление slave устройством
 	SPI1->CR1 |= (SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI);
-    SPI1->CRCPR = 10;
-	SPI1->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
-	SPI1->CR2 = 0x0000;
+ //   SPI1->CRCPR = 10;
+//	SPI1->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
+//	SPI1->CR2 = 0x0000;
    	SPI1->CR1 |= SPI_CR1_SPE;
 
 #if 0
