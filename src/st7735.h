@@ -827,7 +827,8 @@ void lcd7735_sendData(uint8_t data) {  //uint8_t      //unsigned char
 }
 
 void lcd7735_senddata(uint8_t data) {
-  HAL_SPI_Transmit(&hspi1, &data,sizeof(data),0x1);
+    lcd_wr_data(data);
+//  HAL_SPI_Transmit(&hspi1, &data,sizeof(data),0x1);
 }
 
 static const uint16_t Font7x10 [] = {
