@@ -1,5 +1,4 @@
 #include "../system/include/cmsis/stm32f4xx.h"
- #include "../system/include/stm32f4-hal/stm32f4xx_hal.h"
 #include "./spi.h"
 #include "./st7735.h"
 
@@ -8,8 +7,7 @@ int main(void) {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
     GPIOD->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER13_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
     GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14 | GPIO_ODR_OD15);
-    MX_GPIO_Init();
-    SPI1_init();
+    STFTCB_init();
     ST7735_Init();
 
     uint8_t color = 0x00;
