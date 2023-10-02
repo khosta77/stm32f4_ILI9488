@@ -26,6 +26,19 @@ int main(void) {
             }
         }
         ++color;
+        while (1) {
+            if (color == 9)
+                color = 0x01;
+            for (uint8_t y = 0; y < ST7735_HEIGHT; ++y) {
+                    ST7735_DrawLine(0, 0, (ST7735_WIDTH), y, colors[color]);
+                    MyDelay(1000);
+            }
+            for (uint8_t x = (ST7735_WIDTH); x >= 0 && x != 0xFF; --x) {
+                    ST7735_DrawLine(0, 0, x, (ST7735_HEIGHT), colors[color]);
+                    MyDelay(1000);
+            }
+            ++color;
+        }
         //while (1) {
           //  GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14);
         //}
