@@ -192,17 +192,14 @@ void drawLine(int x1, int y1, int x2, int y2, uint16_t color) {
     const int signY = y1 < y2 ? 1 : -1;
     int error = deltaX - deltaY;
     ST7735_DrawPixel(x2, y2, color);
-    while(x1 != x2 || y1 != y2)
-   {
+    while (x1 != x2 || y1 != y2) {
         ST7735_DrawPixel(x1, y1, color);
         int error2 = error * 2;
-        if(error2 > -deltaY)
-        {
+        if (error2 > -deltaY) {
             error -= deltaY;
             x1 += signX;
         }
-        if(error2 < deltaX)
-        {
+        if (error2 < deltaX) {
             error += deltaX;
             y1 += signY;
         }
