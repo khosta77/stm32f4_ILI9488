@@ -76,6 +76,9 @@ void stftcb_sendData(uint8_t dt) {
 #if USING_SMALL_TFT
 void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 void stftcb_DrawPixel(uint8_t x, uint8_t y, uint16_t color);
+void stftcb_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _length, uint16_t color, const uint16_t _wight_);
+void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t color, const uint16_t _height_);
+void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
 
 void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     stftcb_sendCmd(STFTCB_CASET);  // Column addr set
@@ -97,6 +100,62 @@ void stftcb_DrawPixel(uint8_t x, uint8_t y, uint16_t color) {
     stftcb_SetAddressWindow(x, y, x + 1, y + 1);
 	stftcb_sendData(((uint8_t)((color & 0xFF00) >> 8)));
 	stftcb_sendData(((uint8_t)(color & 0x00FF)));
+}
+
+void stftcb_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _length, uint16_t color, const uint16_t _wight_) {
+	STFTCB_CS_OFF;
+    if ((x + _length - 1) >= _wight_)  
+        _length = _wight_ - x;
+    stftcb_SetAddressWindow(x, y, (x + _length - 1), y);
+
+    uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
+    uint8_t rc = ((uint8_t)(color & 0x00FF)); 
+    while (_length--) {
+        stftcb_sendData(lc);
+        stftcb_sendData(rc);
+    }
+	STFTCB_CS_ON;
+}
+
+void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t color, const uint16_t _height_) {
+	STFTCB_CS_OFF;
+    if ((y + _height - 1) >= _height_) 
+        _height = _height_ - y;
+    stftcb_SetAddressWindow(x, y, x, y + _height - 1);
+
+    uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
+    uint8_t rc = ((uint8_t)(color & 0x00FF)); 
+    while (_height--) {
+        stftcb_sendData(lc);
+        stftcb_sendData(rc);
+    }
+	STFTCB_CS_ON;
+}
+
+/** Алгоритм Брезенхэма // https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
+ * */
+void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color) {
+	STFTCB_CS_OFF;
+    const int16_t deltaX = abs(x1 - x0);
+    const int16_t deltaY = abs(y1 - y0);
+    const int16_t signX = (x0 < x1) ? 1 : -1;
+    const int16_t signY = (y0 < y1) ? 1 : -1;
+    int16_t error = deltaX - deltaY;
+    int16_t error2;
+    stftcb_DrawPixel(x1, y1, color);
+    while (x0 != x1 || y0 != y1) {
+        stftcb_DrawPixel(x0, y0, color);
+        error2 = error * 2;
+        if (error2 > -deltaY) {
+            error -= deltaY;
+            x0 += signX;
+        }
+        if (error2 < deltaX) {
+            error += deltaX;
+            y0 += signY;
+        }
+    }
+	STFTCB_CS_ON;
 }
 #else
 #if 0
