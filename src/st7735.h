@@ -194,6 +194,13 @@ void ST7735_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
     stftcb_DrawLine(x0, y0, x1, y1, color); 
 }
 
+void ST7735_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t _height, uint16_t color) {
+    stftcb_DrawFillEasyRectangle(x, y, _wight, _height, color);
+}
+
+void ST7735_FillScreen(uint16_t color) {
+    stftcb_DrawFillEasyRectangle(0, 0, ST7735_WIDTH, ST7735_HEIGHT, color);
+}
 #if 0
 /** Отрисовка букв
  * */

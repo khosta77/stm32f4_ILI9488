@@ -9,6 +9,10 @@
 #include "../system/include/cmsis/stm32f4xx.h"
 #include "./spi.h"
 
+#include <stdbool.h>
+#include <stdlib.h> 
+#include <math.h>
+
 /** Есть большие(сторона > 255) и маленькие(сторона < 255) дисплеи. Для скорости обработки данных на \
  *  маленьких дисплеях стоит использовать другие функции, которые не дробят uint16_t на 2 uint8_t
  * */
@@ -124,7 +128,7 @@ void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t col
     stftcb_SetAddressWindow(x, y, x, y + _height - 1);
 
     uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
-    uint8_t rc = ((uint8_t)(color & 0x00FF)); 
+    uint8_t rc = ((uint8_t)(color & 0x00FF));
     while (_height--) {
         stftcb_sendData(lc);
         stftcb_sendData(rc);
@@ -156,6 +160,54 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
         }
     }
 	STFTCB_CS_ON;
+}
+
+void stftcb_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t _height, uint16_t color) {
+    // clipping
+//    if((x >= ST7735_WIDTH) || (y >= ST7735_HEIGHT)) return;
+//    if((x + w - 1) >= ST7735_WIDTH) w = ST7735_WIDTH - x;
+//    if((y + h - 1) >= ST7735_HEIGHT) h = ST7735_HEIGHT - y;
+
+    STFTCB_CS_OFF;
+    stftcb_SetAddressWindow(x, y, (x + _wight - 1), (y + _height - 1));
+    STFTCB_DC_ON;
+
+    uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
+    uint8_t rc = ((uint8_t)(color & 0x00FF));
+    for (y = _height; y > 0; y--) {
+        for (x = _wight; x > 0; x--) {
+					stftcb_sendData(lc);
+					stftcb_sendData(rc);
+        }
+    }
+	STFTCB_CS_ON;
+}
+
+#define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa + (y - y0) * sina + x0)
+#define ROTATION_Y(x, x0, y, y0, cosa, sina) ((x - x0) * sina - (y - y0) * cosa + y0)
+
+void stftcb_DrawFillRectangle(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float alpha, uint16_t color) {
+    const uint8_t deltaX = ((x1 + x0) / 2);
+    const uint8_t deltaY = ((y1 + y0) / 2);
+
+    float Asin = sin((alpha * M_PI / 180));
+    float Acos = cos((alpha * M_PI / 180));
+
+    uint8_t x2 = x0; uint8_t y2 = y1; uint8_t x3 = x1; uint8_t y3 = y0;
+    // Повернутые кординаты
+    x0 = ROTATION_X(x0, deltaX, y0, deltaY, Acos, Asin);
+    y0 = ROTATION_Y(x0, deltaX, y0, deltaY, Acos, Asin);
+    x1 = ROTATION_X(x1, deltaX, y1, deltaY, Acos, Asin);
+    y1 = ROTATION_Y(x1, deltaX, y1, deltaY, Acos, Asin);
+    x2 = ROTATION_X(x2, deltaX, y2, deltaY, Acos, Asin);
+    y2 = ROTATION_Y(x2, deltaX, y2, deltaY, Acos, Asin);
+    x3 = ROTATION_X(x3, deltaX, y3, deltaY, Acos, Asin);
+    y3 = ROTATION_Y(x3, deltaX, y3, deltaY, Acos, Asin);
+
+    stftcb_DrawLine(x0, y0, x2, y2, color);
+    stftcb_DrawLine(x2, y2, x1, y1, color);
+    stftcb_DrawLine(x1, y1, x3, y3, color);
+    stftcb_DrawLine(x3, y3, x0, y0, color);
 }
 #else
 #if 0
