@@ -16,19 +16,23 @@ int main(void) {
 	while(1) {
         if (color == 9)
             color = 0x00;
-        for (uint8_t y = 0; y < ST7735_HEIGHT; y++) {
-            for (uint8_t x = 0; x < ST7735_WIDTH; x++) {
-                GPIOD->ODR &= ~GPIO_ODR_OD12;
-                ST7735_DrawPixel(x, y, colors[color]);
-                GPIOD->ODR |= GPIO_ODR_OD12;
-                //MyDelay(10);
-                //GPIOD->ODR ^= GPIO_ODR_OD15;
-            }
-        }
+        ST7735_FillScreen(colors[color]);
         ++color;
         while (1) {
             if (color == 9)
                 color = 0x01;
+            for (uint16_t i = 0; i < 360; i++) {
+                stftcb_DrawFillRectangle(40, 40, 90, 90, i, ST7735_BLUE);
+           //     stftcb_DrawFillRectangle(35, 60, 60, 100, (i + 10), ST7735_RED);
+
+        //    ST7735_DrawFillEasyRectangle(20, 20, 100, 100, colors[color]);
+             //   MyDelay(10000);
+                stftcb_DrawFillRectangle(40, 40, 90, 90, i, ST7735_BLACK);
+             //   stftcb_DrawFillRectangle(35, 60, 60, 100, (i + 10), ST7735_BLACK);
+
+
+            }
+/*
             for (uint8_t y = 0; y < ST7735_HEIGHT; ++y) {
                     ST7735_DrawLine(0, 0, (ST7735_WIDTH), y, colors[color]);
                     MyDelay(1000);
@@ -37,7 +41,9 @@ int main(void) {
                     ST7735_DrawLine(0, 0, x, (ST7735_HEIGHT), colors[color]);
                     MyDelay(1000);
             }
+*/
             ++color;
+          //  while(1){}
         }
         //while (1) {
           //  GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14);
