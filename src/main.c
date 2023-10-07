@@ -1,7 +1,8 @@
 #include "../system/include/cmsis/stm32f4xx.h"
-//#include "./spi.h"
-//#include "./st7735.h"
+#include "./spi.h"
+#include "./st7735.h"
 
+#if 0
 #define ch3	(0x03 << 25)
 
 /*
@@ -19,14 +20,15 @@ void spi1_init(void) {
 	//enable clock access to SPI1
 	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
 	//set software slave managment
-	SPI1->CR1 |= SPI_CR1_SSM|SPI_CR1_SSI;
-	//set SPI in master mode
-	SPI1->CR1 |= SPI_CR1_MSTR;
-	SPI1->CR1 |= SPI_CR1_BR_0;
-	//enable DMA_TX buffer
 	SPI1->CR2 |= SPI_CR2_TXDMAEN;
+	SPI1->CR1 |= (SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_BR_0 | SPI_CR1_SPE);
+	//set SPI in master mode
+//	SPI1->CR1 |= SPI_CR1_MSTR;
+//	SPI1->CR1 |= SPI_CR1_BR_0;
+	//enable DMA_TX buffer
+//	SPI1->CR2 |= SPI_CR2_TXDMAEN;
 	//enable SPI peripheral
-	SPI1->CR1 |= SPI_CR1_SPE;
+//	SPI1->CR1 |= SPI_CR1_SPE;
 }
 
 /*
@@ -38,7 +40,8 @@ void dma2_stream3_ch2_init(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 	DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
-	DMA2_Stream3->CR = (ch3 | DMA_SxCR_MINC | DMA_SxCR_DIR_0 | DMA_SxCR_TCIE | DMA_SxCR_HTIE | DMA_SxCR_TEIE | DMA_SxCR_DMEIE);
+	DMA2_Stream3->CR = (ch3 | DMA_SxCR_MINC | DMA_SxCR_DIR_0 | DMA_SxCR_TCIE 
+                            | DMA_SxCR_HTIE | DMA_SxCR_TEIE | DMA_SxCR_DMEIE | DMA_SxCR_CIRC);
 	//DMA2_Stream3->FCR=0;
 	DMA2_Stream3->FCR &= ~DMA_SxFCR_DMDIS;
 	NVIC_EnableIRQ(DMA2_Stream3_IRQn);
@@ -94,7 +97,7 @@ volatile uint8_t finished = 0;
 
 void delayMs(int delay) {
     volatile int i;
-    for (; delay > 0 ;d elay--) {
+    for (; delay > 0; delay--) {
         for (i = 0; i < 3195; i++);
     }
 }
@@ -105,12 +108,20 @@ int main(void) {
 	spi1_init();
 	dma2_stream3_ch2_init();
 	//printf("system init finished\r\n");
+    uint8_t len = 7;
+
+    DMA2->LIFCR |= (DMA_LIFCR_CTCIF3 | DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CFEIF3);
+	DMA2_Stream3->PAR = (uint32_t)&SPI1->DR;
+	DMA2_Stream3->M0AR = (uint32_t)&data[0];
+	DMA2_Stream3->NDTR = len;
+	DMA2_Stream3->CR |= DMA_SxCR_EN;
+
 
 	while(1) {
-		spi_transfer_dma((uint32_t)data,sizeof(data));
-		while(finished==0){}
-		finished=0;
-		delayMs(10);
+//		spi_transfer_dma((uint32_t)data,sizeof(data));
+//		while(finished==0){}
+//		finished=0;
+//		delayMs(10);
 	}
 }
 
@@ -119,7 +130,7 @@ void DMA2_Stream3_IRQHandler(void) {
 		LED_PORT->ODR ^= LED_blue;
 		//printf("finished transfered\r\n");
 		finished = 1;
-		DMA2_Stream3->CR &= ~DMA_SxCR_EN;
+		//DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF3;
 	}
 
@@ -145,20 +156,21 @@ void DMA2_Stream3_IRQHandler(void) {
 		DMA2->LIFCR |= (DMA_LIFCR_CFEIF3);
 	}
 
-	NVIC_ClearPendingIRQ(DMA2_Stream3_IRQn);
+//	NVIC_ClearPendingIRQ(DMA2_Stream3_IRQn);
 }
+#endif
 
-#if 0
+#if 1
 int main(void) {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
     GPIOD->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER13_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
     GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14 | GPIO_ODR_OD15);
 
-    //STFTCB_init();
-    //ST7735_Init();
-    SPI2_SPI_init();
-    GPIOD->ODR |= GPIO_ODR_OD12;
-    while(1) {}
+    STFTCB_init();
+    ST7735_Init();
+    //SPI2_SPI_init();
+    //GPIOD->ODR |= GPIO_ODR_OD12;
+   // while(1) {}
     uint8_t color = 0x00;
     uint16_t colors[9] = {ST7735_BLACK, ST7735_BLUE, ST7735_RED, ST7735_GREEN, ST7735_CYAN, ST7735_MAGENTA, ST7735_YELLOW, ST7735_ORANGE, ST7735_LIGHTGREEN};
 
