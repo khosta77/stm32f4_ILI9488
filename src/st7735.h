@@ -13,7 +13,7 @@ void MyDelay(uint32_t time) {
 }
 
 void ST7735_Init();
-void ST7735_DrawPixel(uint8_t x, uint8_t y, uint16_t color);
+//void ST7735_DrawPixel(uint8_t x, uint8_t y, uint16_t color);
 //uint32_t ST7735_DrawString(uint16_t x, uint16_t y, char *pt, int16_t textColor);
 //void ST7735_DrawCharS(int16_t x, int16_t y, char c, int16_t textColor, int16_t bgColor, uint8_t size);
 //void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
@@ -46,106 +46,110 @@ void ST7735_Init() {
 	ST7735_Init_Command2();
 	ST7735_Init_Command3();
 
-	STFTCB_CS_ON;
+	//STFTCB_CS_ON;
+
 }
 
+//%s/stftcb_sendCmd1byte(/stftcb_sendCmd1byte(/g
+//%s/stftcb_sendData1byte(/stftcb_sendData1byte(/g
+
 void ST7735_Init_Command1() {
-	stftcb_sendCmd(ST7735_SWRESET);    //  1: Software reset
+	stftcb_sendCmd1byte(ST7735_SWRESET);    //  1: Software reset
 	MyDelay(150);
-	stftcb_sendCmd(ST7735_SLPOUT);	    //  2: Out of sleep mode
+	stftcb_sendCmd1byte(ST7735_SLPOUT);	    //  2: Out of sleep mode
 	MyDelay(500);
-	stftcb_sendCmd(ST7735_FRMCTR1);    //  3: Frame rate ctrl - normal mode
-	stftcb_sendData(0x01);			    //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
-	stftcb_sendData(0x2C);
-	stftcb_sendData(0x2D);
-	stftcb_sendCmd(ST7735_FRMCTR2);    //  4: Frame rate control - idle mode
-	stftcb_sendData(0x01);		        //  Rate = fosc/(1x2+40) * (LINE+2C+2D)
-	stftcb_sendData(0x2C);
-	stftcb_sendData(0x2D);
-	stftcb_sendCmd(ST7735_FRMCTR3);    //  5: Frame rate ctrl - partial mode
-	stftcb_sendData(0x01);			    //     Dot inversion mode
-	stftcb_sendData(0x2C);
-	stftcb_sendData(0x2D);
-	stftcb_sendData(0x01);			    //     Line inversion mode
-	stftcb_sendData(0x2C);
-	stftcb_sendData(0x2D);
-	stftcb_sendCmd(ST7735_INVCTR);	    //  6: Display inversion ctrl
-	stftcb_sendData(0x07);			    //     No inversion
-	stftcb_sendCmd(ST7735_PWCTR1);	    //  7: Power control
-	stftcb_sendData(0xA2);
-	stftcb_sendData(0x02);			    //     -4.6V
-	stftcb_sendData(0x84);			    //     AUTO mode
-	stftcb_sendCmd(ST7735_PWCTR2);	    //  8: Power control
-	stftcb_sendData(0xC5);			    //     VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
-	stftcb_sendCmd(ST7735_PWCTR3);	    //  9: Power control
-	stftcb_sendData(0x0A);			    //     Opamp current small
-	stftcb_sendData(0x00);			    //     Boost frequency
-	stftcb_sendCmd(ST7735_PWCTR4);	    // 10: Power control
-	stftcb_sendData(0x8A);			    //     BCLK/2, Opamp current small & Medium low
-	stftcb_sendData(0x2A);
-	stftcb_sendCmd(ST7735_PWCTR5);	    // 11: Power control
-	stftcb_sendData(0x8A);
-	stftcb_sendData(0xEE);
-	stftcb_sendCmd(ST7735_VMCTR1);	    // 12: Power control
-	stftcb_sendData(0x0E);
-	stftcb_sendCmd(ST7735_INVOFF);	    // 13: Don't invert display
-	stftcb_sendCmd(ST7735_MADCTL);	    // 14: Memory access control (directions)
-	stftcb_sendData(ST7735_ROTATION);  //     row addr/col addr, bottom to top refresh
-	stftcb_sendCmd(ST7735_COLMOD);	    // 15: set color mode
-	stftcb_sendData(0x05);			    //     16-bit color
+	stftcb_sendCmd1byte(ST7735_FRMCTR1);    //  3: Frame rate ctrl - normal mode
+	stftcb_sendData1byte(0x01);			    //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
+	stftcb_sendData1byte(0x2C);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendCmd1byte(ST7735_FRMCTR2);    //  4: Frame rate control - idle mode
+	stftcb_sendData1byte(0x01);		        //  Rate = fosc/(1x2+40) * (LINE+2C+2D)
+	stftcb_sendData1byte(0x2C);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendCmd1byte(ST7735_FRMCTR3);    //  5: Frame rate ctrl - partial mode
+	stftcb_sendData1byte(0x01);			    //     Dot inversion mode
+	stftcb_sendData1byte(0x2C);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendData1byte(0x01);			    //     Line inversion mode
+	stftcb_sendData1byte(0x2C);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendCmd1byte(ST7735_INVCTR);	    //  6: Display inversion ctrl
+	stftcb_sendData1byte(0x07);			    //     No inversion
+	stftcb_sendCmd1byte(ST7735_PWCTR1);	    //  7: Power control
+	stftcb_sendData1byte(0xA2);
+	stftcb_sendData1byte(0x02);			    //     -4.6V
+	stftcb_sendData1byte(0x84);			    //     AUTO mode
+	stftcb_sendCmd1byte(ST7735_PWCTR2);	    //  8: Power control
+	stftcb_sendData1byte(0xC5);			    //     VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
+	stftcb_sendCmd1byte(ST7735_PWCTR3);	    //  9: Power control
+	stftcb_sendData1byte(0x0A);			    //     Opamp current small
+	stftcb_sendData1byte(0x00);			    //     Boost frequency
+	stftcb_sendCmd1byte(ST7735_PWCTR4);	    // 10: Power control
+	stftcb_sendData1byte(0x8A);			    //     BCLK/2, Opamp current small & Medium low
+	stftcb_sendData1byte(0x2A);
+	stftcb_sendCmd1byte(ST7735_PWCTR5);	    // 11: Power control
+	stftcb_sendData1byte(0x8A);
+	stftcb_sendData1byte(0xEE);
+	stftcb_sendCmd1byte(ST7735_VMCTR1);	    // 12: Power control
+	stftcb_sendData1byte(0x0E);
+	stftcb_sendCmd1byte(ST7735_INVOFF);	    // 13: Don't invert display
+	stftcb_sendCmd1byte(ST7735_MADCTL);	    // 14: Memory access control (directions)
+	stftcb_sendData1byte(ST7735_ROTATION);  //     row addr/col addr, bottom to top refresh
+	stftcb_sendCmd1byte(ST7735_COLMOD);	    // 15: set color mode
+	stftcb_sendData1byte(0x05);			    //     16-bit color
 }
 
 void ST7735_Init_Command2(void) {
-	stftcb_sendCmd(ST7735_CASET);  //  1: Column addr set
-	stftcb_sendData(0x00);			//     XSTART = 0
-	stftcb_sendData(0x00);
-	stftcb_sendData(0x00);			//     XEND = 127
-	stftcb_sendData(0x7F);
-	stftcb_sendCmd(ST7735_RASET);	//  2: Row addr set
-	stftcb_sendData(0x00);			//     XSTART = 0
-	stftcb_sendData(0x00);
-	stftcb_sendData(0x00);			//     XEND = 127
-	stftcb_sendData(0x7F);
+	stftcb_sendCmd1byte(ST7735_CASET);  //  1: Column addr set
+	stftcb_sendData1byte(0x00);			//     XSTART = 0
+	stftcb_sendData1byte(0x00);
+	stftcb_sendData1byte(0x00);			//     XEND = 127
+	stftcb_sendData1byte(0x7F);
+	stftcb_sendCmd1byte(ST7735_RASET);	//  2: Row addr set
+	stftcb_sendData1byte(0x00);			//     XSTART = 0
+	stftcb_sendData1byte(0x00);
+	stftcb_sendData1byte(0x00);			//     XEND = 127
+	stftcb_sendData1byte(0x7F);
 }
 
 void ST7735_Init_Command3(void) {
-	stftcb_sendCmd(ST7735_GMCTRP1);  //  1: Magical unicorn dust
-	stftcb_sendData(0x02);
-	stftcb_sendData(0x1C);
-	stftcb_sendData(0x07);
-	stftcb_sendData(0x12);
-	stftcb_sendData(0x37);
-	stftcb_sendData(0x32);
-	stftcb_sendData(0x29);
-	stftcb_sendData(0x2D);
-	stftcb_sendData(0x29);
-	stftcb_sendData(0x25);
-	stftcb_sendData(0x2B);
-	stftcb_sendData(0x39);
-	stftcb_sendData(0x00);
-	stftcb_sendData(0x01);
-	stftcb_sendData(0x03);
-	stftcb_sendData(0x10);
-	stftcb_sendCmd(ST7735_GMCTRN1);  //  2: Sparkles and rainbows
-	stftcb_sendData(0x03);
-	stftcb_sendData(0x1D);
-	stftcb_sendData(0x07);
-	stftcb_sendData(0x06);
-	stftcb_sendData(0x2E);
-	stftcb_sendData(0x2C);
-	stftcb_sendData(0x29);
-	stftcb_sendData(0x2D);
-	stftcb_sendData(0x2E);
-	stftcb_sendData(0x2E);
-	stftcb_sendData(0x37);
-	stftcb_sendData(0x3F);
-	stftcb_sendData(0x00);
-	stftcb_sendData(0x00);
-	stftcb_sendData(0x02);
-	stftcb_sendData(0x10);
-	stftcb_sendCmd(ST7735_NORON);
+	stftcb_sendCmd1byte(ST7735_GMCTRP1);  //  1: Magical unicorn dust
+	stftcb_sendData1byte(0x02);
+	stftcb_sendData1byte(0x1C);
+	stftcb_sendData1byte(0x07);
+	stftcb_sendData1byte(0x12);
+	stftcb_sendData1byte(0x37);
+	stftcb_sendData1byte(0x32);
+	stftcb_sendData1byte(0x29);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendData1byte(0x29);
+	stftcb_sendData1byte(0x25);
+	stftcb_sendData1byte(0x2B);
+	stftcb_sendData1byte(0x39);
+	stftcb_sendData1byte(0x00);
+	stftcb_sendData1byte(0x01);
+	stftcb_sendData1byte(0x03);
+	stftcb_sendData1byte(0x10);
+	stftcb_sendCmd1byte(ST7735_GMCTRN1);  //  2: Sparkles and rainbows
+	stftcb_sendData1byte(0x03);
+	stftcb_sendData1byte(0x1D);
+	stftcb_sendData1byte(0x07);
+	stftcb_sendData1byte(0x06);
+	stftcb_sendData1byte(0x2E);
+	stftcb_sendData1byte(0x2C);
+	stftcb_sendData1byte(0x29);
+	stftcb_sendData1byte(0x2D);
+	stftcb_sendData1byte(0x2E);
+	stftcb_sendData1byte(0x2E);
+	stftcb_sendData1byte(0x37);
+	stftcb_sendData1byte(0x3F);
+	stftcb_sendData1byte(0x00);
+	stftcb_sendData1byte(0x00);
+	stftcb_sendData1byte(0x02);
+	stftcb_sendData1byte(0x10);
+	stftcb_sendCmd1byte(ST7735_NORON);
 	MyDelay(10);
-	stftcb_sendCmd(ST7735_DISPON);
+	stftcb_sendCmd1byte(ST7735_DISPON);
 	MyDelay(100);
 }
 
@@ -176,10 +180,11 @@ void ST7735_PlotIncrement(void){
 }
 #endif
 
+#if 0
 void ST7735_DrawPixel(uint8_t x, uint8_t y, uint16_t color) {
-    STFTCB_CS_OFF;
+    //STFTCB_CS_OFF;
     stftcb_DrawPixel(x, y, color);
-    STFTCB_CS_ON;
+    //STFTCB_CS_ON;
 }
 
 void ST7735_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _wight, uint16_t color) {
@@ -194,13 +199,15 @@ void ST7735_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
     stftcb_DrawLine(x0, y0, x1, y1, color); 
 }
 
-void ST7735_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t _height, uint16_t color) {
+void ST7735_DrawFillEasyRectangle(uint16_t x, uint16_t y, uint16_t _wight, uint16_t _height, uint16_t color) {
     stftcb_DrawFillEasyRectangle(x, y, _wight, _height, color);
 }
+#endif
 
 void ST7735_FillScreen(uint16_t color) {
     stftcb_DrawFillEasyRectangle(0, 0, ST7735_WIDTH, ST7735_HEIGHT, color);
 }
+
 #if 0
 /** Отрисовка букв
  * */
@@ -261,8 +268,8 @@ void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
     STFTCB_DC_ON;
     for(y = h; y > 0; y--) {
         for(x = w; x > 0; x--) {
-					stftcb_sendData(color>>8);
-					stftcb_sendData(color);
+					stftcb_sendData1byte(color>>8);
+					stftcb_sendData1byte(color);
         }
     }
 
@@ -308,9 +315,9 @@ void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint
     for(y=0; y<h; y=y+1){
         for(x=0; x<w; x=x+1){
 
-        stftcb_sendData((uint8_t)(data[i] >> 8));
+        stftcb_sendData1byte((uint8_t)(data[i] >> 8));
 
-        stftcb_sendData((uint8_t)data[i]);
+        stftcb_sendData1byte((uint8_t)data[i]);
         i = i + 1;
         }
         i = i + skipC;
@@ -323,7 +330,7 @@ void ST7735_InvertColors(bool invert) {
     //ST7735_Select();
 	STFTCB_CS_OFF;
     //ST7735_WriteCommand(invert ? ST7735_INVON : ST7735_INVOFF);
-	stftcb_sendCmd(invert ? ST7735_INVON : ST7735_INVOFF);
+	stftcb_sendCmd1byte(invert ? ST7735_INVON : ST7735_INVOFF);
     STFTCB_CS_ON;  //Unselect
 }
 #endif

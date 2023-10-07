@@ -7,12 +7,14 @@
 void SPI1_init();
 void SPI1_GPIO_init();
 void SPI1_SPI_init();
+void SPI1_DMA_init();
 
 void SPI1_transmit(uint16_t dt);
 
 void SPI1_init() {
     SPI1_GPIO_init();
     SPI1_SPI_init();
+
 }
 
 void SPI1_SPI_init() {
@@ -23,12 +25,13 @@ void SPI1_SPI_init() {
     // *. Сбросим биты настрой в CR1
     SPI1->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
     // *. Сбросим наверняка CR2
-    SPI1->CR2 = 0x0000;
+	SPI1->CR2 |= SPI_CR2_TXDMAEN;
     // 2. Настройка CR1
     // - SPI_CR1_MSTR - мастер мод
     // - SPI_CR1_SSM - Разрешает программное управление slave устройством
     // - SPI_CR1_SSI - Надо с SPI_CR1_SSM включать. Синхронизирует что то
     // - SPI_CR1_SPE - Запуск SPI
+    // - SPI_CR1_DFF - 16-битный режим передачи, его включать после инициализации дисплея
 	SPI1->CR1 |= (SPI_CR1_MSTR | /*SPI_CR1_DFF |*/ SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_SPE);
 }
 
@@ -46,7 +49,7 @@ void SPI1_GPIO_init() {
 	GPIOA->PUPDR |= (GPIO_PUPDR_PUPD5_1 | GPIO_PUPDR_PUPD7_1);
 }
 
-#if 1
+#if 0
 void SPI2_GPIO_init();
 void SPI2_SPI_init();
 void SPI2_DMA_init();
