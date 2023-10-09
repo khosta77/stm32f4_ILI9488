@@ -12,36 +12,71 @@
 //#include "./stftcb_options.h"
 #include "./st7735_register.h"
 
+#define STFTCB_COLOR_WHITE      0xFFFF
+#define STFTCB_COLOR_BLACK      0x0000
+#define STFTCB_COLOR_BLUE       0x001F
+#define STFTCB_COLOR_BRED       0xF81F
+#define STFTCB_COLOR_GRED 		0xFFE0
+#define STFTCB_COLOR_GBLUE		0x07FF
+#define STFTCB_COLOR_RED        0xF800
+#define STFTCB_COLOR_MAGENTA    0xF81F
+#define STFTCB_COLOR_GREEN      0x07E0
+#define STFTCB_COLOR_CYAN       0x7FFF
+#define STFTCB_COLOR_YELLOW     0xFFE0
+#define STFTCB_COLOR_BROWN 		0xBC40
+#define STFTCB_COLOR_BRRED 		0xFC07
+#define STFTCB_COLOR_GRAY  		0x8430
+#define STFTCB_COLOR_GRAY0      0xEF7D
+#define STFTCB_COLOR_GRAY1      0x8410
+#define STFTCB_COLOR_GRAY2      0x4208
+#define STFTCB_COLOR_DARKBLUE   0x01CF
+#define STFTCB_COLOR_LIGHTBLUE  0x7D7C
+#define STFTCB_COLOR_GRAYBLUE   0x5458
+#define STFTCB_COLOR_LIGHTGREEN 0x841F
+#define STFTCB_COLOR_LIGHTGRAY  0xEF5B
+#define STFTCB_COLOR_LGRAY 	    0xC618
+#define STFTCB_COLOR_LGRAYBLUE  0xA651
 
-#define STFTCB_HEIGHT ST7735_HEIGHT
-#define STFTCB_WIGTH  ST7735_WIDTH
-#define STFTCB_SIZE   (STFTCB_HEIGHT * STFTCB_WIGTH)
+#define STFTCB_HEIGHT ST7735_HEIGHT // Ось Y
+#define STFTCB_WIDTH  ST7735_WIDTH  // Ось X
+#define STFTCB_SIZE   (STFTCB_HEIGHT * STFTCB_WIDTH)
+
 #include <stdbool.h>
 #include <stdlib.h> 
 #include <math.h>
 #include <string.h>
-
-/** Есть большие(сторона > 255) и маленькие(сторона < 255) дисплеи. Для скорости обработки данных на \
- *  маленьких дисплеях стоит использовать другие функции, которые не дробят uint16_t на 2 uint8_t
- * */
-#define USING_SMALL_TFT 1 
 
 #define STFTCB_CASET 0x2A
 #define STFTCB_PASET 0x2B
 #define STFTCB_RAMWR 0x2C
 #define STFTCB_RAMRD 0x2E
 
-#define STFTCB_ARRAY_SIZE (STFTCB_SIZE * sizeof(uint16_t))
+// RESET | RST | RES
+#define STFTCB_RESET_ON   GPIOB->ODR |= GPIO_ODR_OD12
+#define STFTCB_RESET_OFF  GPIOB->ODR &= ~GPIO_ODR_OD12
 
-extern uint16_t stftcb_array_tx[STFTCB_ARRAY_SIZE];
-uint16_t stftcb_array_tx[STFTCB_ARRAY_SIZE];
+// D/C | AO | RS
+#define	STFTCB_DC_ON	  GPIOB->ODR |= GPIO_ODR_OD14
+#define	STFTCB_DC_OFF     GPIOB->ODR &= ~GPIO_ODR_OD14
+
+// SPI_SS(CS)
+#define	STFTCB_CS_ON	  GPIOB->ODR |= GPIO_ODR_OD15
+#define	STFTCB_CS_OFF	  GPIOB->ODR &= ~GPIO_ODR_OD15
+
+// Объявление существования массива для передачи данных
+extern uint16_t stftcb_array_tx[STFTCB_SIZE];
+
+// Сам массив. По хорошему его надо чисто либо в main определить
+uint16_t stftcb_array_tx[STFTCB_SIZE];
+
+// Переменная статуса
 uint8_t stftcb_array_tx_status = 0x00;
 
 void STFTCB_init();
 void STFTCB_GPIO_init();
-void STFTCB_memset();
+void STFTCB_memset_0();
 void mymemset(uint32_t *msg, uint16_t clr, const uint32_t size);
-void STFTCB_DMA_init();
+//void STFTCB_DMA_init();
 
 void stftcb_sendCmd1byte(uint8_t cmd);
 void stftcb_sendData1byte(uint8_t dt);
@@ -49,6 +84,10 @@ void stftcb_sendCmd2byte(uint16_t cmd);
 void stftcb_sendData2byte(uint16_t dt);
 
 void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void stftcb_SetFullAddressWindow();
+
+void stftcb_updateFrame(uint16_t *frame);
+
 //void stftcb_DrawPixel(uint8_t x, uint8_t y, uint16_t color);
 //void stftcb_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _length, uint16_t color, const uint16_t _wight_);
 //void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t color, const uint16_t _height_);
@@ -57,8 +96,13 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 void STFTCB_init() {
     SPI1_init();
     STFTCB_GPIO_init();
-    STFTCB_memset();
-    STFTCB_DMA_init();
+    STFTCB_memset_0();
+
+    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx[0];
+	DMA2_Stream3->NDTR = STFTCB_SIZE;
+
+    NVIC_EnableIRQ(DMA2_Stream3_IRQn);
+    NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
 }
 
 /** @ STFTCB_GPIO_init - инициализация GPIO для различных команд
@@ -77,8 +121,9 @@ void STFTCB_GPIO_init() {
                        (GPIO_OSPEEDER_OSPEEDR15_1 | GPIO_OSPEEDER_OSPEEDR15_0));
 }
 
-void STFTCB_memset() {
-    memset(&stftcb_array_tx[0], 0x0000, STFTCB_ARRAY_SIZE);
+void STFTCB_memset_0() {
+    // Вот это проверить
+    memset(&stftcb_array_tx[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
 }
 
 void mymemset(uint32_t *msg, uint16_t clr, const uint32_t size) {
@@ -87,40 +132,8 @@ void mymemset(uint32_t *msg, uint16_t clr, const uint32_t size) {
     }
 }
 
-void STFTCB_DMA_init() {
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
-	DMA2_Stream3->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
-    // MSIZE | PSIZE в этом собака зарыта
-	DMA2_Stream3->CR = ((0x03 << 25) | DMA_SxCR_MINC | DMA_SxCR_DIR_0 | DMA_SxCR_MSIZE_0 | DMA_SxCR_PSIZE_0 | DMA_SxCR_TCIE 
-                           /* | DMA_SxCR_HTIE | DMA_SxCR_TEIE | DMA_SxCR_DMEIE*//* | DMA_SxCR_CIRC*/);
-	//DMA2_Stream3->FCR=0;
-	//DMA2_Stream3->FCR &= ~DMA_SxFCR_DMDIS;
-
-    DMA2->LIFCR |= DMA_LIFCR_CTCIF3; 
-    //(DMA_LIFCR_CTCIF3 | DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CFEIF3);
-	DMA2_Stream3->PAR = (uint32_t)&SPI1->DR;
-	DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx[0];
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-//	DMA2_Stream3->CR |= DMA_SxCR_EN;
-
-	NVIC_EnableIRQ(DMA2_Stream3_IRQn);
-    NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
-}
-
-void SPI_1byte_mode_on() {
-    SPI1->CR1 &= ~SPI_CR1_SPE;
-    SPI1->CR1 &= ~SPI_CR1_DFF;
-    SPI1->CR1 |= SPI_CR1_SPE;
-}
-
-void SPI_2byte_mode_on() {
-    SPI1->CR1 &= ~SPI_CR1_SPE;
-    SPI1->CR1 |= SPI_CR1_DFF;
-    SPI1->CR1 |= SPI_CR1_SPE;
-}
-
 void DMA2_Stream3_IRQHandler(void) {
+    // Прерывания по завершению передачи
     if (DMA2->LISR & (DMA_LISR_TCIF3)) {
 		GPIOD->ODR ^= GPIO_ODR_OD15;
 		//printf("finished transfered\r\n");
@@ -129,7 +142,7 @@ void DMA2_Stream3_IRQHandler(void) {
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF3;
 	}
 
-/*
+/*  // Прерывания на половине передачи
 	if (DMA2->LISR & (DMA_LISR_HTIF3)) {
 		GPIOD->ODR ^= GPIO_ODR_OD12;
 		//printf("half transfered\r\n");
@@ -137,21 +150,21 @@ void DMA2_Stream3_IRQHandler(void) {
 	}
 */
 
-/*
+/*  // Прерывания при ошибке передачи
     if (DMA2->LISR & (DMA_LISR_TEIF3)) {
 		//printf("transfer error interrupt\r\n");
 		DMA2->LIFCR |= (DMA_LIFCR_CTEIF3);
 	}
 */
 
-/*
+/*  // Прерывания при ошибке direct-режима(чтобы это не значило)
     if (DMA2->LISR & (DMA_LISR_DMEIF3)) {
 		//printf("Direct mode interrupt error\r\n");
 		DMA2->LIFCR |= (DMA_LIFCR_CDMEIF3);
 	}
 */
 
-/*
+/*  // Прерывания при ошибке FIFO
     if (DMA2->LISR & (DMA_LISR_FEIF3)) {
 		//printf("FIFO error interrupt\r\n");
 		DMA2->LIFCR |= (DMA_LIFCR_CFEIF3);
@@ -160,18 +173,6 @@ void DMA2_Stream3_IRQHandler(void) {
 
 //	NVIC_ClearPendingIRQ(DMA2_Stream3_IRQn);
 }
-
-// RESET | RST | RES
-#define STFTCB_RESET_ON   GPIOB->ODR |= GPIO_ODR_OD12
-#define STFTCB_RESET_OFF  GPIOB->ODR &= ~GPIO_ODR_OD12
-
-// D/C | AO | RS
-#define	STFTCB_DC_ON	  GPIOB->ODR |= GPIO_ODR_OD14
-#define	STFTCB_DC_OFF     GPIOB->ODR &= ~GPIO_ODR_OD14
-
-// SPI_SS(CS)
-#define	STFTCB_CS_ON	  GPIOB->ODR |= GPIO_ODR_OD15
-#define	STFTCB_CS_OFF	  GPIOB->ODR &= ~GPIO_ODR_OD15
 
 void stftcb_sendCmd1byte(uint8_t cmd) {
     STFTCB_DC_OFF;
@@ -209,6 +210,34 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
 	stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
+
+void stftcb_SetFullAddressWindow() {
+    SPI_1byte_mode_on();
+    stftcb_sendCmd1byte(STFTCB_CASET);  // Column addr set
+	stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);         // XSTART XS7 ~ XS0
+#if (STFTCB_WIDTH < 0xFF)
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((STFTCB_WIDTH - 1));                    // XEND   XE7 ~ XE0
+#else
+	stftcb_sendData1byte(((0xFF00 & (STFTCB_WIDTH - 1)) >> 8));
+    stftcb_sendData1byte(((STFTCB_WIDTH - 1) & 0x00FF));         // XEND   XE7 ~ XE0  
+#endif
+
+    stftcb_sendCmd1byte(STFTCB_PASET);  // Row addr set
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);         // YSTART
+#if (STFTCB_HEIGHT < 0xFF)
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((STFTCB_HEIGHT - 1));                    // YEND
+#else
+    stftcb_sendData1byte(((0xFF00 & (STFTCB_HEIGHT - 1)) >> 8));
+    stftcb_sendData1byte(((STFTCB_HEIGHT - 1) & 0x00FF));         // YEND
+#endif
+
+	stftcb_sendCmd1byte(STFTCB_RAMWR);
+}
+
 
 /*
 void stftcb_DrawPixel(uint8_t x, uint8_t y, uint16_t color) {
@@ -283,7 +312,7 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
 void stftcb_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t _height, uint16_t color) {
     //STFTCB_CS_OFF;
     while (stftcb_array_tx_status != 0x00) {;}
-    for (uint32_t t = 0; t < 0x1FFFF0; t++);
+//    for (uint32_t t = 0; t < 0x1FFFF0; t++);
     stftcb_SetAddressWindow(x, y, (x + _wight - 1), (y + _height - 1));
     SPI_2byte_mode_on();
     STFTCB_DC_ON;
@@ -296,12 +325,44 @@ void stftcb_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t 
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
     DMA2_Stream3->CR |= DMA_SxCR_MINC;
     DMA2_Stream3->CR |= DMA_SxCR_EN;
-    //for (y = _height; y > 0; y--) {
-      //  for (x = _wight; x > 0; x--) {
-		//		stftcb_sendData2bite(color);
-        //}
-    //}
-	//STFTCB_CS_ON;
+}
+
+void stftcb_DrawFillBackground(uint16_t color) {
+    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
+    stftcb_SetFullAddressWindow();
+    
+    SPI_2byte_mode_on();
+    STFTCB_DC_ON;
+    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
+	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
+
+    for (uint16_t i = 0; i < STFTCB_SIZE; ++i) {
+        stftcb_array_tx[i] = color;
+    }
+
+    stftcb_array_tx_status = 0x11;
+	DMA2_Stream3->NDTR = STFTCB_SIZE;
+    DMA2_Stream3->CR |= DMA_SxCR_MINC;
+    DMA2_Stream3->CR |= DMA_SxCR_EN;
+}
+
+void stftcb_updateFrame(uint16_t *frame) {
+    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
+    stftcb_SetFullAddressWindow();
+    
+    SPI_2byte_mode_on();
+    STFTCB_DC_ON;
+    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
+	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
+
+    for (uint16_t i = 0; i < STFTCB_SIZE; ++i) {
+        stftcb_array_tx[i] = frame[i];
+    }
+
+    stftcb_array_tx_status = 0x11;
+	DMA2_Stream3->NDTR = STFTCB_SIZE;
+    DMA2_Stream3->CR |= DMA_SxCR_MINC;
+    DMA2_Stream3->CR |= DMA_SxCR_EN;
 }
 
 /*
