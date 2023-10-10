@@ -41,6 +41,22 @@
 #define STFTCB_WIDTH  ST7735_WIDTH  // Ось X
 #define STFTCB_SIZE   (STFTCB_HEIGHT * STFTCB_WIDTH)
 
+/* Display position
+ *  +---------------+
+ *  |+---~...~---> X|
+ *  ||              |
+ *  ||              |
+ *  |~              |
+ *  |:              |
+ *  |~              |
+ *  ||              |
+ *  |V              |
+ *  |Y              |
+ *  +---------------+
+ *     <STFTCBus>
+ * */
+#define STFTCB_POINT(arr, y, x) (arr[(x + (y * STFTCB_HEIGHT))])
+
 #include <stdbool.h>
 #include <stdlib.h> 
 #include <math.h>

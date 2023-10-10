@@ -23,7 +23,6 @@ int main(void) {
     ST7735_Init();
 
     uint8_t color = 0x00;
- //   uint16_t colors[9] = {ST7735_BLACK, ST7735_BLUE, ST7735_RED, ST7735_GREEN, ST7735_CYAN, ST7735_MAGENTA, ST7735_YELLOW, ST7735_ORANGE, ST7735_LIGHTGREEN};
 
 	while(1) {
         if (color == COLORS_SIZE)
