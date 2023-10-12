@@ -1,11 +1,6 @@
 #ifndef SERIAL_TFT_CONTROL_BUS_H_
 #define SERIAL_TFT_CONTROL_BUS_H_
 
-/*
- *  На дисплее ILI9488 и ST7735 одинаковые разъемы +- одинаковые. Это говорит о том, что подключение можно \
- *  стандартизировать.
- * */
-
 #include "../system/include/cmsis/stm32f4xx.h"
 #include "./spi.h"
 
@@ -81,7 +76,6 @@
 
 // Объявление существования массива для передачи данных
 extern uint16_t stftcb_array_tx[STFTCB_SIZE];
-extern uint16_t tft_display[STFTCB_SIZE];
 
 // Сам массив. По хорошему его надо чисто либо в main определить
 uint16_t stftcb_array_tx[STFTCB_SIZE];
@@ -92,24 +86,30 @@ uint8_t stftcb_array_tx_status = 0x00;
 void STFTCB_init();
 void STFTCB_GPIO_init();
 void STFTCB_memset_0();
-void mymemset(uint32_t *msg, uint16_t clr, const uint32_t size);
-//void STFTCB_DMA_init();
 
+//// Отправка команды, либо данных настройки по SPI в обход DMA
+// Одно байтовый формат
 void stftcb_sendCmd1byte(uint8_t cmd);
 void stftcb_sendData1byte(uint8_t dt);
+// Дву байтовый формат
 void stftcb_sendCmd2byte(uint16_t cmd);
 void stftcb_sendData2byte(uint16_t dt);
 
+// Задача размеров окна
 void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void stftcb_SetFullAddressWindow();
 
+// Обоновление кадра
+void stftcb_DrawFillBackground(uint16_t color);
 void stftcb_updateFrame();
 
 void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color);
-//void stftcb_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _length, uint16_t color, const uint16_t _wight_);
-//void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t color, const uint16_t _height_);
-//void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
+uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t color);
+uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t color);
+void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
 
+/** @brr
+ * */
 void STFTCB_init() {
     SPI1_init();
     STFTCB_GPIO_init();
@@ -122,13 +122,15 @@ void STFTCB_init() {
     NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
 }
 
-/** @ STFTCB_GPIO_init - инициализация GPIO для различных команд
- *                       B12 ---> RESET | RST | RES - аппаратный сброс (сброс на низком уровне)
- *                       B14 ---> D/C   | AO  | RS  - Выбор данных/команды. (некоторые ЖК-платы называют \
- *                                                    это постоянным током или D / C). При подаче высокого \
- *                                                    напряжения это означает отправку данных, при подаче \
- *                                                    низкого напряжения это означает отправку команды.
- *                       B15 ---> SPI_SS(CS)        - Выбор микросхемы (некоторые ЖК-дисплеи называют это SS)
+/** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
+ *                            B12 ---> RESET | RST | RES - аппаратный сброс (сброс на низком уровне)
+ *                            B14 ---> D/C   | AO  | RS  - Выбор данных/команды. (некоторые ЖК-платы \
+ *                                                         называют это постоянным током или D / C). При \
+ *                                                         подаче высокого напряжения это означает отправку \
+ *                                                         данных, при подаче низкого напряжения это \
+ *                                                         означает отправку команды.
+ *                            B15 ---> SPI_SS(CS)        - Выбор микросхемы (некоторые ЖК-дисплеи называют \
+ *                                                         это SS)
  * */
 void STFTCB_GPIO_init() {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
@@ -138,18 +140,14 @@ void STFTCB_GPIO_init() {
                        (GPIO_OSPEEDER_OSPEEDR15_1 | GPIO_OSPEEDER_OSPEEDR15_0));
 }
 
+/** @brief STFTCB_memset_0 - обнуление массива
+ * */
 void STFTCB_memset_0() {
-    // Вот это проверить
     memset(&stftcb_array_tx[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
- //   memset(&tft_display[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
 }
 
-void mymemset(uint32_t *msg, uint16_t clr, const uint32_t size) {
-    for (uint32_t i = 0; i < size; i++) {
-        *(msg + i) = ((clr << 16) | clr);
-    }
-}
-
+/** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
+ * */
 void DMA2_Stream3_IRQHandler(void) {
     // Прерывания по завершению передачи
     if (DMA2->LISR & (DMA_LISR_TCIF3)) {
@@ -267,44 +265,36 @@ void stftcb_SetFullAddressWindow() {
  *
  * */
 void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color) {
-    STFTCB_POINT(tft_display, y, x) = color;
+    STFTCB_POINT(stftcb_array_tx, y, x) = color;
 }
 
-/*
-void stftcb_DrawHorizonLine(uint8_t x, uint8_t y, uint8_t _length, uint16_t color, const uint16_t _wight_) {
-	//STFTCB_CS_OFF;
-    if ((x + _length - 1) >= _wight_)  
-        _length = _wight_ - x;
-    stftcb_SetAddressWindow(x, y, (x + _length - 1), y);
+/** @brief stftcb_DrawHorizonLine - отрисовка линии по горизонтали
+ * */
+uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t color) {
+    if ((x0 > x1) || (x1 < STFTCB_WIDTH) || (y < STFTCB_HEIGHT))
+        return 0xFF;
 
-    uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
-    uint8_t rc = ((uint8_t)(color & 0x00FF)); 
-    while (_length--) {
-        stftcb_sendData1byte(lc);
-        stftcb_sendData1byte(rc);
-    }
-	//STFTCB_CS_ON;
+    const uint16_t Y = y * STFTCB_WIDTH;
+    for (uint16_t x = x0; x < x1; x++)
+        stftcb_array_tx[(Y + x)] = color;
+ 
+    return 0x00;
 }
-*/
 
-/*
-void stftcb_DrawVerticalLine(uint8_t x, uint8_t y, uint8_t _height, uint16_t color, const uint16_t _height_) {
-	//STFTCB_CS_OFF;
-    if ((y + _height - 1) >= _height_) 
-        _height = _height_ - y;
-    stftcb_SetAddressWindow(x, y, x, y + _height - 1);
+/** @brief stftcb_DrawHorizonLine - отрисовка линии по вертикали
+ * */
+uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t color) {
+    if ((y0 > y1) || (y1 < STFTCB_HEIGHT) || (x < STFTCB_WIDTH))
+        return 0xFF;
 
-    uint8_t lc = ((uint8_t)((color & 0xFF00) >> 8));
-    uint8_t rc = ((uint8_t)(color & 0x00FF));
-    while (_height--) {
-        stftcb_sendData1byte(lc);
-        stftcb_sendData1byte(rc);
-    }
-	//STFTCB_CS_ON;
+    for (uint16_t y = y0, Y = (y0 * STFTCB_WIDTH); y < y1; y++, Y += STFTCB_WIDTH)
+        stftcb_array_tx[(Y + x)] = color;
+
+    return 0x00;
 }
-*/
 
-/** Алгоритм Брезенхэма // https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
+/** @brief stftcb_DrawLine - отрисовка линии, по диагонали, с помощью алгоритма Брезенхэма ссылка: \
+ *                           https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
  * */
 void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color) {
     const int16_t deltaX = abs(x1 - x0);
@@ -328,24 +318,6 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
     }
 }
 
-void stftcb_DrawFillEasyRectangle(uint8_t x, uint8_t y, uint8_t _wight, uint8_t _height, uint16_t color) {
-    //STFTCB_CS_OFF;
-    while (stftcb_array_tx_status != 0x00) {;}
-//    for (uint32_t t = 0; t < 0x1FFFF0; t++);
-    stftcb_SetAddressWindow(x, y, (x + _wight - 1), (y + _height - 1));
-    SPI_2byte_mode_on();
-    STFTCB_DC_ON;
-    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
-    for (uint16_t i = 0; i < STFTCB_SIZE; i++) {
-        stftcb_array_tx[i] = color;
-    }
-   // memset(&stftcb_array_tx[0], color, STFTCB_ARRAY_SIZE);
-    stftcb_array_tx_status = 0x11;
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-    DMA2_Stream3->CR |= DMA_SxCR_MINC;
-    DMA2_Stream3->CR |= DMA_SxCR_EN;
-}
-
 void stftcb_DrawFillBackground(uint16_t color) {
     while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
     stftcb_SetFullAddressWindow();
@@ -355,9 +327,8 @@ void stftcb_DrawFillBackground(uint16_t color) {
     DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
 
-    for (uint16_t i = 0; i < STFTCB_SIZE; ++i) {
+    for (uint16_t i = 0; i < STFTCB_SIZE; ++i)
         stftcb_array_tx[i] = color;
-    }
 
     stftcb_array_tx_status = 0x11;
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
@@ -374,10 +345,6 @@ void stftcb_updateFrame() {
     DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
 
-    //for (uint16_t i = 0; i < STFTCB_SIZE; ++i) {
-      //  stftcb_array_tx[i] = tft_display[i];
-    //}
-
     stftcb_array_tx_status = 0x11;
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
     DMA2_Stream3->CR |= DMA_SxCR_MINC;
@@ -388,15 +355,13 @@ void stftcb_updateFrame() {
 #define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa - (y - y0) * sina + x0)
 #define ROTATION_Y(x, x0, y, y0, cosa, sina) ((x - x0) * sina + (y - y0) * cosa + y0)
 
-
-/*
+/** @brief stftcb_DrawNoFillRectangle - отрисовка НЕ закрашенного треугольника, без или с поворотом.
  *    (x0, y0)    (x1, y1)
  *            +--+
  *            |  |
  *            +--+
  *    (x3, y3)    (x2, y2)
  * */
-
 void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color) {
     const uint16_t deltaX = ((x2 + x0) / 2);
     const uint16_t deltaY = ((y2 + y0) / 2);
@@ -426,5 +391,65 @@ void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t 
     stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
 }
 
+/** @brief stftcb_DrawFillRectangle - отрисовка НЕ закрашенного треугольника, без или с поворотом.
+ *    (x0, y0)    (x1, y1)
+ *            +--+
+ *            |  |
+ *            +--+
+ *    (x3, y3)    (x2, y2)
+ * */
+void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color) {
+    //// 0. Отрисовка контура
+    const uint16_t deltaX = ((x2 + x0) / 2);
+    const uint16_t deltaY = ((y2 + y0) / 2);
+
+    float Asin = sin((alpha * M_PI / 180));
+    float Acos = cos((alpha * M_PI / 180));
+
+    uint16_t x1 = x2, y1 = y0; 
+    uint16_t x3 = x0, y3 = y2;
+
+    // Повернутые кординаты
+    uint16_t x0n = ROTATION_X(x0, deltaX, y0, deltaY, Acos, Asin);
+    uint16_t y0n = ROTATION_Y(x0, deltaX, y0, deltaY, Acos, Asin);
+    
+    uint16_t x1n = ROTATION_X(x1, deltaX, y1, deltaY, Acos, Asin);
+    uint16_t y1n = ROTATION_Y(x1, deltaX, y1, deltaY, Acos, Asin);
+    
+    uint16_t x2n = ROTATION_X(x2, deltaX, y2, deltaY, Acos, Asin);
+    uint16_t y2n = ROTATION_Y(x2, deltaX, y2, deltaY, Acos, Asin);
+    
+    uint16_t x3n = ROTATION_X(x3, deltaX, y3, deltaY, Acos, Asin);
+    uint16_t y3n = ROTATION_Y(x3, deltaX, y3, deltaY, Acos, Asin);
+
+    stftcb_DrawLine(x0n, y0n, x1n, y1n, color);
+    stftcb_DrawLine(x1n, y1n, x2n, y2n, color);
+    stftcb_DrawLine(x2n, y2n, x3n, y3n, color);
+    stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
+    //// 1. Закраска
+    uint16_t x[4] = {x0n, x1n, x2n, x3n};
+    uint16_t y[4] = {y0n, y1n, y2n, y3n};
+    uint8_t min_i = 0, max_i = 0;
+    for (uint8_t i = 1; i < 4; ++i) {
+        if (y[i] > y[max_i])
+            max_i = i;
+        if (y[i] < y[min_i]) 
+            min_i = i;
+    }
+
+    uint8_t mrk = 0x00;
+    for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
+        if (stftcb_array_tx[Y] == color) {
+            if (mrk == 0x00)
+                mrk = 0x11;
+            else
+                mrk = 0x00;
+        } else {
+            if (mrk == 0x11) {
+                stftcb_array_tx[Y] = color;
+            }
+        }
+    }
+}
 
 #endif  // SERIAL_TFT_CONTROL_BUS_H_
