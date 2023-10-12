@@ -204,9 +204,9 @@ void ST7735_DrawFillEasyRectangle(uint16_t x, uint16_t y, uint16_t _wight, uint1
 }
 #endif
 
-void ST7735_FillScreen(uint16_t color) {
-    stftcb_DrawFillEasyRectangle(0, 0, ST7735_WIDTH, ST7735_HEIGHT, color);
-}
+//void ST7735_FillScreen(uint16_t color) {
+  //  stftcb_DrawFillEasyRectangle(0, 0, ST7735_WIDTH, ST7735_HEIGHT, color);
+//}
 
 #if 0
 /** Отрисовка букв
