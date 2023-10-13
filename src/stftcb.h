@@ -519,4 +519,138 @@ void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2
     }
 }
 
+/** @brief stftcb_DrawNoFillCicle - рисует контур круга
+ * */
+void stftcb_DrawNoFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
+    int16_t x = 0;
+    int16_t y = R;
+    int16_t delta = 1 - 2 * R;
+    int16_t error = 0;
+    if (stftcb_array_tx_mxar == 0) {
+        while (y >= x) {
+            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
+            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
+            error = 2 * (delta + y) - 1;
+            if ((delta < 0) && (error <= 0)) {
+                delta += (2 * (++x)) + 1;
+            } else {
+                if ((delta > 0) && (error > 0)) {
+                    delta -= (2 * (--y)) + 1;
+                } else {
+                    delta += 2 * (++x - --y);
+                }
+            }
+        }
+    } else {
+        while (y >= x) {
+            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
+            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
+            error = 2 * (delta + y) - 1;
+            if ((delta < 0) && (error <= 0)) {
+                delta += (2 * (++x)) + 1;
+            } else {
+                if ((delta > 0) && (error > 0)) {
+                    delta -= (2 * (--y)) + 1;
+                } else {
+                    delta += 2 * (++x - --y);
+                }
+            }
+        } 
+    }
+}
+
+/** @brief stftcb_DrawFillCicle - закраска с бликами происходит, почему так не понимаю, если отдельно 
+ *                                выводить, то все нормально
+ * */
+void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
+    int16_t x = 0;
+    int16_t y = R;
+    int16_t delta = 3 - 2 * y;
+    if (stftcb_array_tx_mxar == 0) {
+        while (x <= y) {
+            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
+            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
+            delta += delta < 0 ? 4 * x + 6 : 4 * (x - y--) + 10;
+            ++x;
+        }
+    } else {
+        while (x <= y) {
+            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
+            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
+            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
+            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
+            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
+            delta += delta < 0 ? 4 * x + 6 : 4 * (x - y--) + 10;
+            ++x; 
+        } 
+    }
+    uint8_t mrk_back = 0x00, mrk_front = 0x00;
+    if (stftcb_array_tx_mxar == 0) {  // Это ублюдски сделано. Надо как то передалть, но позже
+        for (uint16_t Y = ((y0 - R + 1) * STFTCB_WIDTH), Ym = (y0 + R * STFTCB_WIDTH); Y < Ym; ++Y) {
+            if (stftcb_array_tx_0[Y] == color) {  // Осуществлеям проверку на определние находимся \
+                                            // ли мы на границе контура
+                if (mrk_back == 0x00) {
+                    if (mrk_front == 0x00) {
+                        mrk_back = 0x11;
+                    }
+                } else {
+                    if (mrk_front == 0x11) {
+                        mrk_back = 0x00;
+                    }
+                }
+            } else {
+                if (mrk_back == 0x11) {
+                    mrk_front = 0x11;
+                    stftcb_array_tx_0[Y] = color;
+                } else {
+                    mrk_front = 0x00;
+                }
+            }
+        }
+    } else {
+        for (uint16_t Y = ((y0 - R + 1) * STFTCB_WIDTH), Ym = ((y0 + R) * STFTCB_WIDTH); Y < Ym; ++Y) {
+            if (stftcb_array_tx_1[Y] == color) {  // Осуществлеям проверку на определние находимся \
+                                            // ли мы на границе контура
+                if (mrk_back == 0x00) {
+                    if (mrk_front == 0x00) {
+                        mrk_back = 0x11;
+                    }
+                } else {
+                    if (mrk_front == 0x11) {
+                        mrk_back = 0x00;
+                    }
+                }
+            } else {
+                if (mrk_back == 0x11) {
+                    mrk_front = 0x11;
+                    stftcb_array_tx_1[Y] = color;
+                } else {
+                    mrk_front = 0x00;
+                }
+            }
+        }
+    }
+}
+
 #endif  // SERIAL_TFT_CONTROL_BUS_H_
