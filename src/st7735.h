@@ -47,7 +47,7 @@ void ST7735_Init() {
 	ST7735_Init_Command3();
 
 	//STFTCB_CS_ON;
-
+    stftcb_updateFrame();
 }
 
 //%s/stftcb_sendCmd1byte(/stftcb_sendCmd1byte(/g
