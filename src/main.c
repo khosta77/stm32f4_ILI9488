@@ -8,6 +8,11 @@ void drawLine_0();
 void drawLine_1();
 void drawRectangleNoFill();
 void drawRectangleFill();
+void drawCicleNoFill();
+void drawCicleFill();
+
+
+
 
 uint16_t colors[] = {
 //    STFTCB_COLOR_BLACK,
@@ -31,9 +36,8 @@ int main(void) {
 
     STFTCB_init();
     ST7735_Init();
-
 	while(1) {
-        drawRectangleFill();
+        drawCicleFill();
 	}
 }
 
@@ -144,7 +148,43 @@ void drawRectangleFill() {
         stftcb_updateFrame();
             GPIOD->ODR |= GPIO_ODR_OD14;
         stftcb_DrawFillBackground(0x0000);
-            //memset(&tft_display[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
         GPIOD->ODR |= GPIO_ODR_OD12;
     }  
 }
+
+void drawCicleNoFill() {
+    for (int a = 6; a < 16; a++) {
+        GPIOD->ODR &= ~GPIO_ODR_OD12;
+            GPIOD->ODR &= ~GPIO_ODR_OD13;
+        stftcb_DrawNoFillCicle((STFTCB_WIDTH / 2), (STFTCB_HEIGHT / 2), 20, STFTCB_COLOR_RED);
+        stftcb_DrawNoFillCicle(20, 70, (a + 10), STFTCB_COLOR_GREEN);
+        stftcb_DrawNoFillCicle(48, 60, (a - 5), STFTCB_COLOR_YELLOW);
+        stftcb_DrawNoFillCicle(70, 100, (a + 3.2), STFTCB_COLOR_WHITE);
+            GPIOD->ODR |= GPIO_ODR_OD13;
+            GPIOD->ODR &= ~GPIO_ODR_OD14;
+        stftcb_updateFrame();
+            GPIOD->ODR |= GPIO_ODR_OD14;
+        stftcb_DrawFillBackground(0x0000);
+        GPIOD->ODR |= GPIO_ODR_OD12;
+    }  
+}
+
+void drawCicleFill() {
+    for (int a = 6; a < 16; a++) {
+        GPIOD->ODR &= ~GPIO_ODR_OD12;
+            GPIOD->ODR &= ~GPIO_ODR_OD13;
+        stftcb_DrawFillCicle((STFTCB_WIDTH / 2), (STFTCB_HEIGHT / 2), 20, STFTCB_COLOR_RED);
+        //stftcb_DrawFillCicle(20, 70, (a + 10), STFTCB_COLOR_GREEN);
+        //stftcb_DrawFillCicle(48, 60, (a - 5), STFTCB_COLOR_YELLOW);
+        //stftcb_DrawFillCicle(70, 100, (a + 3.2), STFTCB_COLOR_WHITE);
+            GPIOD->ODR |= GPIO_ODR_OD13;
+            GPIOD->ODR &= ~GPIO_ODR_OD14;
+        stftcb_updateFrame();
+        for (uint16_t i = 0; i < 0xFFFD; i++);
+            GPIOD->ODR |= GPIO_ODR_OD14;
+        stftcb_DrawFillBackground(0x0000);
+        GPIOD->ODR |= GPIO_ODR_OD12;
+    }  
+}
+
+// stftcb_DrawNoFillCicle
