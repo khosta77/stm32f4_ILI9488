@@ -75,13 +75,16 @@
 #define	STFTCB_CS_OFF	  GPIOB->ODR &= ~GPIO_ODR_OD15
 
 // Объявление существования массива для передачи данных
-extern uint16_t stftcb_array_tx[STFTCB_SIZE];
+extern uint16_t stftcb_array_tx_0[STFTCB_SIZE];
+extern uint16_t stftcb_array_tx_1[STFTCB_SIZE];
 
 // Сам массив. По хорошему его надо чисто либо в main определить
-uint16_t stftcb_array_tx[STFTCB_SIZE];
+uint16_t stftcb_array_tx_0[STFTCB_SIZE];
+uint16_t stftcb_array_tx_1[STFTCB_SIZE];
 
 // Переменная статуса
 uint8_t stftcb_array_tx_status = 0x00;
+uint8_t stftcb_array_tx_mxar = 0x00;
 
 void STFTCB_init();
 void STFTCB_GPIO_init();
@@ -100,13 +103,16 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 void stftcb_SetFullAddressWindow();
 
 // Обоновление кадра
-void stftcb_DrawFillBackground(uint16_t color);
 void stftcb_updateFrame();
 
+// Функции рисования
+void stftcb_DrawFillBackground(uint16_t color);
 void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color);
 uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t color);
 uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t color);
 void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
+void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
+void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
 
 /** @brr
  * */
@@ -115,7 +121,8 @@ void STFTCB_init() {
     STFTCB_GPIO_init();
     STFTCB_memset_0();
 
-    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx[0];
+    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx_0[0];
+    DMA2_Stream3->M1AR = (uint32_t)&stftcb_array_tx_1[0];
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
 
     NVIC_EnableIRQ(DMA2_Stream3_IRQn);
@@ -143,7 +150,9 @@ void STFTCB_GPIO_init() {
 /** @brief STFTCB_memset_0 - обнуление массива
  * */
 void STFTCB_memset_0() {
-    memset(&stftcb_array_tx[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+    memset(&stftcb_array_tx_0[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+    memset(&stftcb_array_tx_1[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+//    memset(&tft_display[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
 }
 
 /** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
@@ -265,7 +274,10 @@ void stftcb_SetFullAddressWindow() {
  *
  * */
 void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color) {
-    STFTCB_POINT(stftcb_array_tx, y, x) = color;
+    if (stftcb_array_tx_mxar == 0)
+        STFTCB_POINT(stftcb_array_tx_0, y, x) = color;
+    else
+        STFTCB_POINT(stftcb_array_tx_1, y, x) = color;
 }
 
 /** @brief stftcb_DrawHorizonLine - отрисовка линии по горизонтали
@@ -276,7 +288,10 @@ uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t co
 
     const uint16_t Y = y * STFTCB_WIDTH;
     for (uint16_t x = x0; x < x1; x++)
-        stftcb_array_tx[(Y + x)] = color;
+        if (stftcb_array_tx_mxar == 0)
+            stftcb_array_tx_0[(Y + x)] = color;
+        else
+            stftcb_array_tx_1[(Y + x)] = color;
  
     return 0x00;
 }
@@ -288,7 +303,10 @@ uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t c
         return 0xFF;
 
     for (uint16_t y = y0, Y = (y0 * STFTCB_WIDTH); y < y1; y++, Y += STFTCB_WIDTH)
-        stftcb_array_tx[(Y + x)] = color;
+        if (stftcb_array_tx_mxar == 0)
+            stftcb_array_tx_0[(Y + x)] = color;
+        else
+            stftcb_array_tx_1[(Y + x)] = color;
 
     return 0x00;
 }
@@ -303,37 +321,42 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
     const int16_t signY = (y0 < y1) ? 1 : -1;
     int16_t error = deltaX - deltaY;
     int16_t error2;
-    STFTCB_POINT(stftcb_array_tx, y1, x1) = color;
-    while (x0 != x1 || y0 != y1) {
-        STFTCB_POINT(stftcb_array_tx, y0, x0) = color;
-        error2 = error * 2;
-        if (error2 > -deltaY) {
-            error -= deltaY;
-            x0 += signX;
+    if (stftcb_array_tx_mxar == 0) {
+        STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
+        while (x0 != x1 || y0 != y1) {
+            STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
+            error2 = error * 2;
+            if (error2 > -deltaY) {
+                error -= deltaY;
+                x0 += signX;
+            }
+            if (error2 < deltaX) {
+                error += deltaX;
+                y0 += signY;
+            }
         }
-        if (error2 < deltaX) {
-            error += deltaX;
-            y0 += signY;
+    } else {
+        STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
+        while (x0 != x1 || y0 != y1) {
+            STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
+            error2 = error * 2;
+            if (error2 > -deltaY) {
+                error -= deltaY;
+                x0 += signX;
+            }
+            if (error2 < deltaX) {
+                error += deltaX;
+                y0 += signY;
+            }
         }
     }
 }
 
 void stftcb_DrawFillBackground(uint16_t color) {
-    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
-    stftcb_SetFullAddressWindow();
-    
-    SPI_2byte_mode_on();
-    STFTCB_DC_ON;
-    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
-
-    for (uint16_t i = 0; i < STFTCB_SIZE; ++i)
-        stftcb_array_tx[i] = color;
-
-    stftcb_array_tx_status = 0x11;
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-    DMA2_Stream3->CR |= DMA_SxCR_MINC;
-    DMA2_Stream3->CR |= DMA_SxCR_EN;
+    if (stftcb_array_tx_mxar == 0)
+        memset(&stftcb_array_tx_0[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+    else
+        memset(&stftcb_array_tx_1[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
 }
 
 void stftcb_updateFrame() {
@@ -344,6 +367,14 @@ void stftcb_updateFrame() {
     STFTCB_DC_ON;
     DMA2_Stream3->CR &= ~DMA_SxCR_EN;
 	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
+    
+    if (stftcb_array_tx_mxar == 0) {
+        DMA2_Stream3->CR &= ~DMA_SxCR_CT;
+        stftcb_array_tx_mxar = 0x01;
+    } else {
+        DMA2_Stream3->CR |= DMA_SxCR_CT;
+        stftcb_array_tx_mxar = 0x00;
+    }
 
     stftcb_array_tx_status = 0x11;
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
@@ -391,7 +422,8 @@ void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t 
     stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
 }
 
-/** @brief stftcb_DrawFillRectangle - отрисовка НЕ закрашенного треугольника, без или с поворотом.
+/** @brief stftcb_DrawFillRectangle - отрисовка Закрашенного треугольника, без или с поворотом.
+ *                                    Есть искажение, при наложении фигур
  *    (x0, y0)    (x1, y1)
  *            +--+
  *            |  |
@@ -427,6 +459,8 @@ void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2
     stftcb_DrawLine(x2n, y2n, x3n, y3n, color);
     stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
     //// 1. Закраска
+    /** Первый алгоритм
+     * */
     uint16_t x[4] = {x0n, x1n, x2n, x3n};
     uint16_t y[4] = {y0n, y1n, y2n, y3n};
     uint8_t min_i = 0, max_i = 0;
@@ -437,16 +471,49 @@ void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2
             min_i = i;
     }
 
-    uint8_t mrk = 0x00;
-    for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
-        if (stftcb_array_tx[Y] == color) {
-            if (mrk == 0x00)
-                mrk = 0x11;
-            else
-                mrk = 0x00;
-        } else {
-            if (mrk == 0x11) {
-                stftcb_array_tx[Y] = color;
+    uint8_t mrk_back = 0x00, mrk_front = 0x00;
+    if (stftcb_array_tx_mxar == 0) {  // Это ублюдски сделано. Надо как то передалть, но позже
+        for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
+            if (stftcb_array_tx_0[Y] == color) {  // Осуществлеям проверку на определние находимся \
+                                            // ли мы на границе контура
+                if (mrk_back == 0x00) {
+                    if (mrk_front == 0x00) {
+                        mrk_back = 0x11;
+                    }
+                } else {
+                    if (mrk_front == 0x11) {
+                        mrk_back = 0x00;
+                    }
+                }
+            } else {
+                if (mrk_back == 0x11) {
+                    mrk_front = 0x11;
+                    stftcb_array_tx_0[Y] = color;
+                } else {
+                    mrk_front = 0x00;
+                }
+            }
+        }
+    } else {
+        for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
+            if (stftcb_array_tx_1[Y] == color) {  // Осуществлеям проверку на определние находимся \
+                                            // ли мы на границе контура
+                if (mrk_back == 0x00) {
+                    if (mrk_front == 0x00) {
+                        mrk_back = 0x11;
+                    }
+                } else {
+                    if (mrk_front == 0x11) {
+                        mrk_back = 0x00;
+                    }
+                }
+            } else {
+                if (mrk_back == 0x11) {
+                    mrk_front = 0x11;
+                    stftcb_array_tx_1[Y] = color;
+                } else {
+                    mrk_front = 0x00;
+                }
             }
         }
     }
