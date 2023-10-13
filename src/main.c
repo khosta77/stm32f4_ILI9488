@@ -1,6 +1,6 @@
 #include "./st7735.h"
 
-uint16_t tft_display[STFTCB_SIZE];
+//uint16_t tft_display[STFTCB_SIZE];
 
 void rainbow();
 void drawPoints();
@@ -51,7 +51,7 @@ void drawPoints() {
             color = 0x00;
     for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
         for (uint16_t j = 0; j < STFTCB_WIDTH; j++) {
-            tft_display[I + j] = colors[color];  //stftcb_DrawPixel(i, j, colors[color]);
+            stftcb_DrawPixel(i, j, colors[color]);
         }
     }
     stftcb_updateFrame();
@@ -138,12 +138,13 @@ void drawRectangleFill() {
         stftcb_DrawFillRectangle(50, 50, 90, 90, a, STFTCB_COLOR_RED);
         stftcb_DrawFillRectangle(20, 70, 30, 80, (a + 10), STFTCB_COLOR_GREEN);
         stftcb_DrawFillRectangle(48, 60, 80, 100, (a - 5), STFTCB_COLOR_YELLOW);
-        stftcb_DrawFillRectangle(70, 100, 85, 120, (a + 3.2), STFTCB_COLOR_WHITE);
+        stftcb_DrawFillRectangle(70, 100, 100, 130, (a + 3.2), STFTCB_COLOR_WHITE);
             GPIOD->ODR |= GPIO_ODR_OD13;
             GPIOD->ODR &= ~GPIO_ODR_OD14;
         stftcb_updateFrame();
             GPIOD->ODR |= GPIO_ODR_OD14;
-        memset(&stftcb_array_tx[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+        stftcb_DrawFillBackground(0x0000);
+            //memset(&tft_display[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
         GPIOD->ODR |= GPIO_ODR_OD12;
     }  
 }
