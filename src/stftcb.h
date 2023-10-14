@@ -652,5 +652,65 @@ void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
         }
     }
 }
+/*=========================================================================================================*/
+/*                                              Шрифты                                                     */
+/*=========================================================================================================*/
+
+#define STFTCB_TEXT_COLOR 0xFFFF
+#define STFTCB_TEXT_ORIENTATION 0x1  // 0x1 горизонтальный
+
+uint8_t Font[] = {
+    0b00000000,  // empty
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+
+    0b01111110,  // 0
+    0b01000010,
+    0b01000010,
+    0b01000010,
+    0b01000010,
+    0b01000010,
+    0b01000010,
+    0b01111110,
+
+    0b00000110,  // 1
+    0b00001010,
+    0b00010010,
+    0b00100010,
+    0b00000010,
+    0b00000010,
+    0b00000010,
+    0b00000010,
+
+    0b00111100,  // 2
+    0b01000010,
+    0b01000010,
+    0b00100010,
+    0b00000100,
+    0b00111000,
+    0b01000000,
+    0b00111110,
+};
+
+static uint16_t get_symbol_id(char c);
+
+void printt(uint16_t x0, uint16_t y0, const char *str) {
+    const uint16_t Csize = (sizeof(str) / sizeof(char));
+    const uint16_t ssize = (sizeof(str) / sizeof(char) * 8);
+    uint16_t x = x0;
+    for (uint16_t y = (y0 * STFTCB_WIDTH), Y = ((y0 + 8) * STFTCB_WIDTH); y < Y; y++) {
+        for (uint16_t c = 0; c < Csize; c++) {
+#if STFTCB_TEXT_ORIENTATION
+            uint16_t sid = get_symbol_id(c);
+            for (uint16_t )
+#endif
+        }
+    } 
+}
 
 #endif  // SERIAL_TFT_CONTROL_BUS_H_

@@ -174,9 +174,9 @@ void drawCicleFill() {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
         stftcb_DrawFillCicle((STFTCB_WIDTH / 2), (STFTCB_HEIGHT / 2), 20, STFTCB_COLOR_RED);
-        //stftcb_DrawFillCicle(20, 70, (a + 10), STFTCB_COLOR_GREEN);
-        //stftcb_DrawFillCicle(48, 60, (a - 5), STFTCB_COLOR_YELLOW);
-        //stftcb_DrawFillCicle(70, 100, (a + 3.2), STFTCB_COLOR_WHITE);
+        stftcb_DrawFillCicle(20, 70, (a + 10), STFTCB_COLOR_GREEN);
+        stftcb_DrawFillCicle(48, 60, (a - 5), STFTCB_COLOR_YELLOW);
+        stftcb_DrawFillCicle(70, 100, (a + 3.2), STFTCB_COLOR_WHITE);
             GPIOD->ODR |= GPIO_ODR_OD13;
             GPIOD->ODR &= ~GPIO_ODR_OD14;
         stftcb_updateFrame();
