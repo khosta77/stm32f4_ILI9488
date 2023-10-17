@@ -142,9 +142,9 @@ void STFTCB_init() {
 void STFTCB_GPIO_init() {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
     GPIOB->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
-    GPIOB->OSPEEDR |= ((GPIO_OSPEEDER_OSPEEDR12_1 | GPIO_OSPEEDER_OSPEEDR12_0) |
-                       (GPIO_OSPEEDER_OSPEEDR14_1 | GPIO_OSPEEDER_OSPEEDR14_0) |
-                       (GPIO_OSPEEDER_OSPEEDR15_1 | GPIO_OSPEEDER_OSPEEDR15_0));
+   // GPIOB->OSPEEDR |= ((GPIO_OSPEEDER_OSPEEDR12_1 | GPIO_OSPEEDER_OSPEEDR12_0) |
+     //                  (GPIO_OSPEEDER_OSPEEDR14_1 | GPIO_OSPEEDER_OSPEEDR14_0) |
+       //                (GPIO_OSPEEDER_OSPEEDR15_1 | GPIO_OSPEEDER_OSPEEDR15_0));
 }
 
 /** @brief STFTCB_memset_0 - обнуление массива
@@ -669,7 +669,7 @@ uint8_t MyFont[] = {
     0b00000000,
     0b00000000,
     0b00000000,
-    0b00000000,
+    0b01111110,
 
     0b00111100,  // 0
     0b01000010,
@@ -874,8 +874,8 @@ void reverse(char* str) {
 }
 #endif
 
-void printt(uint16_t x0, uint16_t y0, const char *str, uint16_t n) {
-    const uint16_t Ssize = strlen(str);  // (sizeof(str) / sizeof(char));
+void printt(uint16_t x0, uint16_t y0, const char *str) {
+    const uint16_t Ssize = strlen(str);
     uint16_t sid;
 
 #if STFTCB_TEXT_FLIP_VERTICAL
@@ -897,6 +897,121 @@ void printt(uint16_t x0, uint16_t y0, const char *str, uint16_t n) {
 #else
         draw_symbol_h(sid, y0, x0);
         y0 += 8;
+#endif
+    }
+}
+
+#if STFTCB_TEXT_ORIENTATION
+static void draw_symbol_V(uint16_t id, const uint16_t y, const uint16_t x) {
+    uint8_t b = 0x00;
+    if (stftcb_array_tx_mxar == 0x00) {  // Смотри комментарий в draw_symbol_H
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x80) {
+                    stftcb_array_tx_0[(y + 2 * i) * STFTCB_WIDTH + (x + 2 * j)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + 2 * i) * STFTCB_WIDTH + (x + 2 * j + 1)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + 2 * i + 1) * STFTCB_WIDTH + (x + 2 * j)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + 2 * i + 1) * STFTCB_WIDTH + (x + 2 * j + 1)] = STFTCB_TEXT_COLOR;
+                }
+                b <<= 1;
+            }
+        }
+    } else {
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x80) {
+                    stftcb_array_tx_1[(y + 2 * i) * STFTCB_WIDTH + (x + 2 * j)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + 2 * i) * STFTCB_WIDTH + (x + 2 * j + 1)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + 2 * i + 1) * STFTCB_WIDTH + (x + 2 * j)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + 2 * i + 1) * STFTCB_WIDTH + (x + 2 * j + 1)] = STFTCB_TEXT_COLOR;
+                }
+                b <<= 1;
+            }
+        }
+    }
+}
+#else
+static void draw_symbol_H(uint16_t id, const uint16_t y, const uint16_t x) {
+    uint8_t b = 0x00;
+    if (stftcb_array_tx_mxar == 0x00) {  // Смотри комментарий к малому.
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x01) {
+                    stftcb_array_tx_0[(y + j * 2) * STFTCB_WIDTH + (x + 2 * i)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + j * 2) * STFTCB_WIDTH + (x + 2 * i + 1)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + j * 2 + 1) * STFTCB_WIDTH + (x + 2 * i)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_0[(y + j * 2 + 1) * STFTCB_WIDTH + (x + 2 * i + 1)] = STFTCB_TEXT_COLOR;
+                }
+                b >>= 1;
+            }
+        }
+    } else {
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x01) {
+                    stftcb_array_tx_1[(y + (j * 2)) * STFTCB_WIDTH + (x + 2 * i)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + (j * 2)) * STFTCB_WIDTH + (x + 2 * i + 1)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + (j * 2 + 1)) * STFTCB_WIDTH + (x + 2 * i)] = STFTCB_TEXT_COLOR;
+                    stftcb_array_tx_1[(y + (j * 2 + 1)) * STFTCB_WIDTH + (x + 2 * i + 1)] = STFTCB_TEXT_COLOR;
+                }
+                b >>= 1;
+            }
+        }
+    }
+}
+#endif
+
+void printT(uint16_t x0, uint16_t y0, const char *str) {
+    const uint16_t Ssize = strlen(str);  // (sizeof(str) / sizeof(char));
+    uint16_t sid;
+
+#if STFTCB_TEXT_FLIP_VERTICAL
+    char nstr[128] = "";
+    strcpy(nstr, str);
+    reverse(nstr);
+#endif
+
+    for (uint16_t c = 0; c < Ssize; c++) {
+#if STFTCB_TEXT_FLIP_VERTICAL
+        sid = get_symbol_id(*(nstr + c));
+#else
+        sid = get_symbol_id(*(str + c));
+#endif
+
+#if STFTCB_TEXT_ORIENTATION
+        draw_symbol_V(sid, y0, x0);
+        x0 += 16;
+#else
+        draw_symbol_H(sid, y0, x0);
+        y0 += 16;
 #endif
     }
 }
