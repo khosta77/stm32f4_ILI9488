@@ -37,7 +37,7 @@ int main(void) {
     STFTCB_init();
     ST7735_Init();
 
-    char *c = "9876543210 ";
+    char *c = " 1234567890";
     printt(0,0, &c[0], 11);
     stftcb_updateFrame();
 
