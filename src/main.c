@@ -29,21 +29,57 @@ const uint8_t COLORS_SIZE = (sizeof(colors) / sizeof(colors[0]));
 #define RGB565(r, g, b) (((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3))
 #define CHECK_C(c) { if (c == COLORS_SIZE) c = 0x00; \
                      else ++c;}
-int main(void) { 
+
+void SystemClockConfig() {
+	// Prescaler Configrations
+	RCC->CFGR 	|= (5 << 10);			// APB1 Prescaler = 4
+	RCC->CFGR 	|= (0x5 << 13);			// APB2 Prescaler = 3
+
+	RCC->CR 	|= (1 << 16);			// HSE Clock Enable - HSEON
+	while(!(RCC->CR & 0x00020000));		// Wait until HSE Clock Ready - HSERDY
+
+	// PLL Configrations
+	RCC->PLLCFGR = 0;					// Clear all PLLCFGR register
+	RCC->PLLCFGR |=  (8		<<  0);		// PLLM = 8;
+	RCC->PLLCFGR |=  (336 	<<  6);		// PLLN = 336;
+	RCC->PLLCFGR &= ~(3 	<< 16);		// PLLP = 2; // For 2, Write 0
+	RCC->PLLCFGR |=  (1 	<< 22);		// HSE Oscillator clock select as PLL
+	RCC->PLLCFGR |=  (7 	<< 24);		// PLLQ = 7;
+
+	RCC->CR 		|=  (1 		<< 24); // PLL Clock Enable - PLLON
+	while(!(RCC->CR & 0x02000000)); 	// Wait until PLL Clock Ready - PLLRDY
+
+	// Flash Configrations
+	FLASH->ACR = 0;						// Clear all ACR register (Access Control Register)
+	FLASH->ACR 		|= (5 <<  0); 		// Latency - 5 Wait State
+	FLASH->ACR 		|= (1 <<  9);		// Instruction Cache Enable
+	FLASH->ACR 		|= (1 << 10);		// Data Cache Enable
+
+	RCC->CFGR 		|= (2 <<  0);		// PLL Selected as System Clock
+	while((RCC->CFGR & 0x0F) != 0x0A); 	// Wait PLL On
+}
+
+int main(void) {
+    //SystemClockConfig();
+    SystemCoreClockUpdate();
+
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIODEN;
     GPIOD->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER13_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
     GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14 | GPIO_ODR_OD15);
 
+//    if (SystemCoreClock == 16000000/*168000000*/)
+//        GPIOD->ODR |= GPIO_ODR_OD12;
     STFTCB_init();
     ST7735_Init();
 
-    char *c = " 1234567890";
-    printt(0,0, &c[0], 11);
-    stftcb_updateFrame();
+    char *c = "890";
+//    printt(0,0, &c[0]);
+//    stftcb_updateFrame();
 
 	while(1) {
-        printt(0,0, &c[0], 11);
+        printT(0,0, &c[0]);
         stftcb_updateFrame();
+        //stftcb_DrawFillBackground(0x0000);
 	}
 }
 
