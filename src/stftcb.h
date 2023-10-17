@@ -656,8 +656,10 @@ void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
 /*                                              Шрифты                                                     */
 /*=========================================================================================================*/
 #if 1
-#define STFTCB_TEXT_COLOR 0xFFFF
-#define STFTCB_TEXT_ORIENTATION 0x1  // 0x1 горизонтальный
+#define STFTCB_TEXT_COLOR           0xFFFF
+#define STFTCB_TEXT_ORIENTATION     0x01  // 0x00 горизонтальный | 0x01 вертикальный
+#define STFTCB_TEXT_FLIP_HORIZONTAL 0x00  // 0x00 к VCC | 0x01 к LED
+#define STFTCB_TEXT_FLIP_VERTICAL   0x01  // Отзеркаливание текста 
 
 uint8_t MyFont[] = {
     0b00000000,  // empty
@@ -790,37 +792,114 @@ static uint16_t get_symbol_id(char c) {
     }
 }
 
-static void draw_symbol(uint16_t id, const uint16_t y, const uint16_t x) {
+#if STFTCB_TEXT_ORIENTATION
+static void draw_symbol_v(uint16_t id, const uint16_t y, const uint16_t x) {
     uint8_t b = 0x00;
-    for (uint8_t i = 0; i < 8; i++) {
-        b = MyFont[(id + i)];
-        for (uint16_t j = 0; j < 8; j++) {
-            if (stftcb_array_tx_mxar == 0) {
-                if (b & 0x01) {
-                    stftcb_array_tx_0[(y + j) * STFTCB_WIDTH + (x + i)] = STFTCB_TEXT_COLOR;
-                }  // Можно добавить, чтобы красил в цвет background
-            } else {
-                if (b & 0x01) {
-                    stftcb_array_tx_1[(y + j) * STFTCB_WIDTH + (x + i)] = STFTCB_TEXT_COLOR;
-                }
+    if (stftcb_array_tx_mxar == 0x00) {  // Смотри комментарий в draw_symbol_h
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x80) stftcb_array_tx_0[(y + i) * STFTCB_WIDTH + (x + j)] = STFTCB_TEXT_COLOR;
+                b <<= 1;
             }
-            b >>= 1;
+        }
+    } else {
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x80) stftcb_array_tx_1[(y + i) * STFTCB_WIDTH + (x + j)] = STFTCB_TEXT_COLOR;
+                b <<= 1;
+            }
         }
     }
 }
-
-void printt(uint16_t x0, uint16_t y0, const char *str, uint16_t n) {
-    const uint16_t Csize = n;  // (sizeof(str) / sizeof(char));
-    
-    for (uint16_t c = 0; c < Csize; c++) {
-//#if STFTCB_TEXT_ORIENTATION
-        uint16_t sid = get_symbol_id(*(str + c));
-        draw_symbol(sid, y0, x0);
-        y0 += 8;
-//#else
-        // Тут пока что пусто :(
-//#endif
+#else
+static void draw_symbol_h(uint16_t id, const uint16_t y, const uint16_t x) {
+    uint8_t b = 0x00;
+    if (stftcb_array_tx_mxar == 0x00) {  // Как же ужасно это выглядит. Но такое разделение нужно, \
+                                         // чтобы в цикле не проводить однотипную проверку на нужный \
+                                         // нам массив записи, хоть это и ужасно выглядит, но пару тактов \
+                                         // экономит, надо подумать как можно это исправить. 17.10.23
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x01) stftcb_array_tx_0[(y + j) * STFTCB_WIDTH + (x + i)] = STFTCB_TEXT_COLOR;
+                b >>= 1;
+            }
+        }
+    } else {
+#if STFTCB_TEXT_FLIP_HORIZONTAL
+        for (uint8_t i = 0; i < 8; i++) {
+            b = MyFont[(id + i)];
+            for (uint16_t j = 0; j < 8; j++) {
+#else
+        for (uint8_t i = 0, k = 7; i < 8; i++, k--) {
+            b = MyFont[(id + k)];
+            for (uint16_t j = 7; j != 0xFFFF; j--) {
+#endif
+                if (b & 0x01) stftcb_array_tx_1[(y + j) * STFTCB_WIDTH + (x + i)] = STFTCB_TEXT_COLOR;
+                b >>= 1;
+            }
+        }
     }
 }
 #endif
+
+#if STFTCB_TEXT_FLIP_VERTICAL
+void reverse(char* str) {
+    uint16_t n = strlen(str);
+    for (int i = 0, j = n - 1; i < j; i++, j--) {
+        char ch = str[i];
+        str[i] = str[j];
+        str[j] = ch;
+    }
+}
+#endif
+
+void printt(uint16_t x0, uint16_t y0, const char *str, uint16_t n) {
+    const uint16_t Ssize = strlen(str);  // (sizeof(str) / sizeof(char));
+    uint16_t sid;
+
+#if STFTCB_TEXT_FLIP_VERTICAL
+    char nstr[128] = "";
+    strcpy(nstr, str);
+    reverse(nstr);
+#endif
+
+    for (uint16_t c = 0; c < Ssize; c++) {
+#if STFTCB_TEXT_FLIP_VERTICAL
+        sid = get_symbol_id(*(nstr + c));
+#else
+        sid = get_symbol_id(*(str + c));
+#endif
+
+#if STFTCB_TEXT_ORIENTATION
+        draw_symbol_v(sid, y0, x0);
+        x0 += 8;
+#else
+        draw_symbol_h(sid, y0, x0);
+        y0 += 8;
+#endif
+    }
+}
+#endif  // text
+
 #endif  // SERIAL_TFT_CONTROL_BUS_H_
