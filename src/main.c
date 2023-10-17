@@ -42,6 +42,8 @@ int main(void) {
     stftcb_updateFrame();
 
 	while(1) {
+        printt(0,0, &c[0], 11);
+        stftcb_updateFrame();
 	}
 }
 
