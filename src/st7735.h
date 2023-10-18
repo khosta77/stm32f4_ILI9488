@@ -43,7 +43,7 @@ void ST7735_Init() {
 	STFTCB_RESET_ON;
 
 	ST7735_Init_Command1();
-	ST7735_Init_Command2();
+	//ST7735_Init_Command2();
 	ST7735_Init_Command3();
 
 	//STFTCB_CS_ON;
@@ -58,8 +58,8 @@ void ST7735_Init_Command1() {
 	MyDelay(150);
 	stftcb_sendCmd1byte(ST7735_SLPOUT);	    //  2: Out of sleep mode
 	MyDelay(500);
-	stftcb_sendCmd1byte(ST7735_FRMCTR1);    //  3: Frame rate ctrl - normal mode
-	stftcb_sendData1byte(0x01);			    //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
+	stftcb_sendCmd1byte(ST7735_FRMCTR1);    //  3: Frame rate ctrl - normal mode	
+    stftcb_sendData1byte(0x01);			    //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
 	stftcb_sendData1byte(0x2C);
 	stftcb_sendData1byte(0x2D);
 	stftcb_sendCmd1byte(ST7735_FRMCTR2);    //  4: Frame rate control - idle mode
@@ -68,7 +68,7 @@ void ST7735_Init_Command1() {
 	stftcb_sendData1byte(0x2D);
 	stftcb_sendCmd1byte(ST7735_FRMCTR3);    //  5: Frame rate ctrl - partial mode
 	stftcb_sendData1byte(0x01);			    //     Dot inversion mode
-	stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x2C);
 	stftcb_sendData1byte(0x2D);
 	stftcb_sendData1byte(0x01);			    //     Line inversion mode
 	stftcb_sendData1byte(0x2C);

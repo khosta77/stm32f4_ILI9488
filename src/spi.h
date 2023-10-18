@@ -26,7 +26,7 @@ static void SPI1_SPI_init() {
     // *. Что то мутное, ни на что не влияет
 //  SPI1->CRCPR = 10;
     // *. Сбросим биты настрой в CR1
-    //SPI1->CR1 |= (SPI_CR1_BR_1 | SPI_CR1_BR_0);
+   // SPI1->CR1 |= (SPI_CR1_BR_1 | SPI_CR1_BR_0);
     SPI1->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
     // *. Сбросим наверняка CR2
 	SPI1->CR2 |= SPI_CR2_TXDMAEN;
