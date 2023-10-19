@@ -2,7 +2,6 @@
 #define SPI_H_
 
 #include "../system/include/cmsis/stm32f4xx.h"
-#include "../system/include/stm32f4-hal/stm32f4xx_hal.h"
 
 void SPI1_init();
 static void SPI1_GPIO_init();
