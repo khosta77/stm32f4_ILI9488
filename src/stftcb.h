@@ -2,7 +2,7 @@
 #define SERIAL_TFT_CONTROL_BUS_H_
 
 #include "../system/include/cmsis/stm32f4xx.h"
-#include "./spi.h"
+#include "./stftcb_spi.h"
 
 //#include "./stftcb_options.h"
 #include "./st7735_register.h"
@@ -125,9 +125,9 @@ void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2
 /** @brief STFTCB_init - инициализация интерфейса serial tft control bus
  * */
 void STFTCB_init() {
-    SPI1_init();
+    SPI_init();
     STFTCB_GPIO_init();
-    STFTCB_memset_0();
+    STFTCB_memset0();
     STFTCB_DMA_init();
 }
 
@@ -157,9 +157,6 @@ static void STFTCB_DMA_init() {
     DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx_0[0];
     DMA2_Stream3->M1AR = (uint32_t)&stftcb_array_tx_1[0];
 	DMA2_Stream3->NDTR = STFTCB_SIZE;
-
-    NVIC_EnableIRQ(DMA2_Stream3_IRQn);
-    NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
 }
 
 /** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
@@ -208,22 +205,22 @@ void DMA2_Stream3_IRQHandler(void) {
 
 void stftcb_sendCmd1byte(uint8_t cmd) {
     STFTCB_DC_OFF;
-    SPI1_transmit(cmd);
+    SPI_transmit(cmd);
 }
 
 void stftcb_sendData1byte(uint8_t dt) {
     STFTCB_DC_ON;
-    SPI1_transmit(dt);
+    SPI_transmit(dt);
 }
 
 void stftcb_sendCmd2byte(uint16_t cmd) {
     STFTCB_DC_OFF;
-    SPI1_transmit(cmd);
+    SPI_transmit(cmd);
 }
 
 void stftcb_sendData2byte(uint16_t dt) {
     STFTCB_DC_ON;
-    SPI1_transmit(dt);
+    SPI_transmit(dt);
 }
 
 #if (STFTCB_WIDTH < 0xFF)
@@ -367,10 +364,10 @@ uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t c
 
 static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
                              const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             int16_t error, int16_t erroe2);
+                             const int16_t signY, int16_t error, int16_t error2);
 static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
                              const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             int16_t error, int16_t erroe2);
+                             const int16_t signY, int16_t error, int16_t error2);
 
 /** @brief stftcb_DrawLine - отрисовка линии, по диагонали, с помощью алгоритма Брезенхэма ссылка: \
  *                           https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
@@ -420,8 +417,8 @@ void stftcb_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_
 }
 
 static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
-                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             int16_t error, int16_t erroe2) {
+                             const int16_t deltaX, const int16_t deltaY, const int16_t signX, 
+                             const int16_t signY, int16_t error, int16_t error2) {
     STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
     while (x0 != x1 || y0 != y1) {
         STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
@@ -439,7 +436,7 @@ static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 
 static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
                              const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             int16_t error, int16_t erroe2) {
+                             const int16_t signY, int16_t error, int16_t error2) {
     STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
     while (x0 != x1 || y0 != y1) {
         STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
