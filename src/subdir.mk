@@ -4,13 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-./src/main.c
+./src/main.c \
+./src/stftcb.c \
+./src/stftcb_spi.c \
+./src/stftcb_font.c
 
 C_DEPS += \
-./src/main.d
+./src/main.d \
+./src/stftcb.d \
+./src/stftcb_spi.d \
+./src/stftcb_font.d
 
 OBJS += \
-./src/main.o
+./src/main.o \
+./src/stftcb.o \
+./src/stftcb_spi.o \
+./src/stftcb_font.o
 
 
 # Each subdirectory must supply rules for building sources it contributes
