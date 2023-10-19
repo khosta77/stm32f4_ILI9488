@@ -86,47 +86,49 @@ uint16_t stftcb_array_tx_1[STFTCB_SIZE];
 uint8_t stftcb_array_tx_status = 0x00;
 uint8_t stftcb_array_tx_mxar = 0x00;
 
+//// Функция инициализации
 void STFTCB_init();
-void STFTCB_GPIO_init();
-void STFTCB_memset_0();
+static void STFTCB_GPIO_init();
+static void STFTCB_memset0();
+static void STFTCB_DMA_init();
 
 //// Отправка команды, либо данных настройки по SPI в обход DMA
 // Одно байтовый формат
 void stftcb_sendCmd1byte(uint8_t cmd);
 void stftcb_sendData1byte(uint8_t dt);
+
 // Дву байтовый формат
 void stftcb_sendCmd2byte(uint16_t cmd);
 void stftcb_sendData2byte(uint16_t dt);
 
+//// Работа с кадром
 // Задача размеров окна
-void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+#if (STFTCB_WIDTH < 0xFF)
+void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+#else
+void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+#endif
 void stftcb_SetFullAddressWindow();
 
 // Обоновление кадра
 void stftcb_updateFrame();
 
-// Функции рисования
+//// Функции отрисовки объектов
 void stftcb_DrawFillBackground(uint16_t color);
 void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color);
 uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t color);
 uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t color);
-void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
+void stftcb_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
 void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
 void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
 
-/** @brr
+/** @brief STFTCB_init - инициализация интерфейса serial tft control bus
  * */
 void STFTCB_init() {
     SPI1_init();
     STFTCB_GPIO_init();
     STFTCB_memset_0();
-
-    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx_0[0];
-    DMA2_Stream3->M1AR = (uint32_t)&stftcb_array_tx_1[0];
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-
-    NVIC_EnableIRQ(DMA2_Stream3_IRQn);
-    NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
+    STFTCB_DMA_init();
 }
 
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
@@ -139,20 +141,25 @@ void STFTCB_init() {
  *                            B15 ---> SPI_SS(CS)        - Выбор микросхемы (некоторые ЖК-дисплеи называют \
  *                                                         это SS)
  * */
-void STFTCB_GPIO_init() {
+static void STFTCB_GPIO_init() {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
     GPIOB->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
-   // GPIOB->OSPEEDR |= ((GPIO_OSPEEDER_OSPEEDR12_1 | GPIO_OSPEEDER_OSPEEDR12_0) |
-     //                  (GPIO_OSPEEDER_OSPEEDR14_1 | GPIO_OSPEEDER_OSPEEDR14_0) |
-       //                (GPIO_OSPEEDER_OSPEEDR15_1 | GPIO_OSPEEDER_OSPEEDR15_0));
 }
 
 /** @brief STFTCB_memset_0 - обнуление массива
  * */
-void STFTCB_memset_0() {
+static void STFTCB_memset0() {
     memset(&stftcb_array_tx_0[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
     memset(&stftcb_array_tx_1[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
-//    memset(&tft_display[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+}
+
+static void STFTCB_DMA_init() {
+    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx_0[0];
+    DMA2_Stream3->M1AR = (uint32_t)&stftcb_array_tx_1[0];
+	DMA2_Stream3->NDTR = STFTCB_SIZE;
+
+    NVIC_EnableIRQ(DMA2_Stream3_IRQn);
+    NVIC_SetPriority(DMA2_Stream3_IRQn, 2);
 }
 
 /** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
@@ -219,19 +226,38 @@ void stftcb_sendData2byte(uint16_t dt) {
     SPI1_transmit(dt);
 }
 
+#if (STFTCB_WIDTH < 0xFF)
+void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+#else
 void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+#endif
     SPI_1byte_mode_on();
     stftcb_sendCmd1byte(STFTCB_CASET);  // Column addr set
-	stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte(x0);           // XSTART XS7 ~ XS0
-	stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte(x1);           // XEND   XE7 ~ XE0
+#if (STFTCB_WIDTH < 0xFF)
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((x0));                    // XSTART  XS7 ~ XS0
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((x1));                    // XEND    XE7 ~ XE0
 
-	stftcb_sendCmd1byte(STFTCB_PASET);  // Row addr set
-	stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte(y0);           // YSTART
-	stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte(y1);           // END
+#else
+    stftcb_sendData1byte(((0xFF00 & (x0)) >> 8));
+    stftcb_sendData1byte(((x0) & 0x00FF));
+	stftcb_sendData1byte(((0xFF00 & (x1)) >> 8));
+    stftcb_sendData1byte(((x1) & 0x00FF));
+#endif
+
+    stftcb_sendCmd1byte(STFTCB_PASET);  // Row addr set
+#if (STFTCB_HEIGHT < 0xFF)
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((y0));
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte((y1));
+#else
+    stftcb_sendData1byte(((0xFF00 & (y0)) >> 8));
+    stftcb_sendData1byte(((y0) & 0x00FF));
+    stftcb_sendData1byte(((0xFF00 & (y1)) >> 8));
+    stftcb_sendData1byte(((y1) & 0x00FF));
+#endif
 
 	stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
@@ -263,7 +289,35 @@ void stftcb_SetFullAddressWindow() {
 	stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
 
+/** @brief stftcb_updateFrame - функция обновления кадра
+ * */
+void stftcb_updateFrame() {
+    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
+    stftcb_SetFullAddressWindow();
+    
+    SPI_2byte_mode_on();
+    STFTCB_DC_ON;
+    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
+	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
+    
+    if (stftcb_array_tx_mxar == 0) {
+        DMA2_Stream3->CR &= ~DMA_SxCR_CT;
+        stftcb_array_tx_mxar = 0x01;
+    } else {
+        DMA2_Stream3->CR |= DMA_SxCR_CT;
+        stftcb_array_tx_mxar = 0x00;
+    }
 
+    stftcb_array_tx_status = 0x11;
+	DMA2_Stream3->NDTR = STFTCB_SIZE;
+    DMA2_Stream3->CR |= DMA_SxCR_MINC;
+    DMA2_Stream3->CR |= DMA_SxCR_EN;
+}
+
+
+/*=========================================================================================================*/
+/*                              Функции отрисовки объектов в кадре                                         */
+/*=========================================================================================================*/
 /** @brief stftcb_DrawPixel - отрисовка одного пикселя в заднной точке. Функция работает крайне медленно,
  *                            лучше исполозовать такую конструкцию
  *  for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
@@ -311,10 +365,17 @@ uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t c
     return 0x00;
 }
 
+static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
+                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
+                             int16_t error, int16_t erroe2);
+static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
+                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
+                             int16_t error, int16_t erroe2);
+
 /** @brief stftcb_DrawLine - отрисовка линии, по диагонали, с помощью алгоритма Брезенхэма ссылка: \
  *                           https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
  * */
-void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color) {
+void stftcb_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
     const int16_t deltaX = abs(x1 - x0);
     const int16_t deltaY = abs(y1 - y0);
     const int16_t signX = (x0 < x1) ? 1 : -1;
@@ -322,6 +383,8 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
     int16_t error = deltaX - deltaY;
     int16_t error2;
     if (stftcb_array_tx_mxar == 0) {
+        stftcb_DrawLine0(x0, y0, x1, y1, color, deltaX, deltaY, signX, signY, error, error2);
+#if 0
         STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
         while (x0 != x1 || y0 != y1) {
             STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
@@ -335,7 +398,10 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
                 y0 += signY;
             }
         }
+#endif
     } else {
+        stftcb_DrawLine1(x0, y0, x1, y1, color, deltaX, deltaY, signX, signY, error, error2);
+#if 0
         STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
         while (x0 != x1 || y0 != y1) {
             STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
@@ -349,39 +415,54 @@ void stftcb_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t co
                 y0 += signY;
             }
         }
+#endif
     }
 }
 
+static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
+                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
+                             int16_t error, int16_t erroe2) {
+    STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
+    while (x0 != x1 || y0 != y1) {
+        STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
+        error2 = error * 2;
+        if (error2 > -deltaY) {
+            error -= deltaY;
+            x0 += signX;
+        }
+        if (error2 < deltaX) {
+            error += deltaX;
+            y0 += signY;
+        }
+    }
+}
+
+static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color, 
+                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
+                             int16_t error, int16_t erroe2) {
+    STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
+    while (x0 != x1 || y0 != y1) {
+        STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
+        error2 = error * 2;
+        if (error2 > -deltaY) {
+            error -= deltaY;
+            x0 += signX;
+        }
+        if (error2 < deltaX) {
+            error += deltaX;
+            y0 += signY;
+        }
+    }
+}
+
+/* @brief stftcb_DrawFillBackground - закрашивает в выбранный цвет задний фон
+ * */
 void stftcb_DrawFillBackground(uint16_t color) {
     if (stftcb_array_tx_mxar == 0)
-        memset(&stftcb_array_tx_0[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+        memset(&stftcb_array_tx_0[0], color, (STFTCB_SIZE * sizeof(uint16_t)));
     else
-        memset(&stftcb_array_tx_1[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+        memset(&stftcb_array_tx_1[0], color, (STFTCB_SIZE * sizeof(uint16_t)));
 }
-
-void stftcb_updateFrame() {
-    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
-    stftcb_SetFullAddressWindow();
-    
-    SPI_2byte_mode_on();
-    STFTCB_DC_ON;
-    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
-    
-    if (stftcb_array_tx_mxar == 0) {
-        DMA2_Stream3->CR &= ~DMA_SxCR_CT;
-        stftcb_array_tx_mxar = 0x01;
-    } else {
-        DMA2_Stream3->CR |= DMA_SxCR_CT;
-        stftcb_array_tx_mxar = 0x00;
-    }
-
-    stftcb_array_tx_status = 0x11;
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-    DMA2_Stream3->CR |= DMA_SxCR_MINC;
-    DMA2_Stream3->CR |= DMA_SxCR_EN;
-}
-
 
 #define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa - (y - y0) * sina + x0)
 #define ROTATION_Y(x, x0, y, y0, cosa, sina) ((x - x0) * sina + (y - y0) * cosa + y0)
