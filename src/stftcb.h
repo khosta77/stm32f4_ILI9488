@@ -121,6 +121,14 @@ uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t c
 void stftcb_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
 void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
 void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color);
+//void stftcb_DrawNoFillTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
+//                               float alpha, uint16_t color);
+//void stftcb_DrawFillTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
+//                             float alpha, uint16_t color);
+void stftcb_DrawNoFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color);
+void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color);
+
+
 
 /** @brief STFTCB_init - инициализация интерфейса serial tft control bus
  * */
@@ -733,7 +741,7 @@ void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
 /*=========================================================================================================*/
 /*                                              Шрифты                                                     */
 /*=========================================================================================================*/
-#if 1
+#if 0
 #define STFTCB_TEXT_COLOR           0xFFFF
 #define STFTCB_TEXT_ORIENTATION     0x01  // 0x00 горизонтальный | 0x01 вертикальный
 #define STFTCB_TEXT_FLIP_HORIZONTAL 0x00  // 0x00 к VCC | 0x01 к LED
