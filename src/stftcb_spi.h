@@ -1,7 +1,7 @@
 #ifndef SERIAL_TFT_CONTROL_BUS_SPI_H_
 #define SERIAL_TFT_CONTROL_BUS_SPI_H_
 
-#include "../system/include/cmsis/stm32f4xx.h"
+#include "stftcb_reg.h"
 
 void SPI_init();
 
