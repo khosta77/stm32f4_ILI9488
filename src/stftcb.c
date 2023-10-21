@@ -14,7 +14,7 @@ static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
                              const int16_t deltaX, const int16_t deltaY, const int16_t signX,
                              const int16_t signY, int16_t error, int16_t error2);
 
-#if STFTCB_TEXT
+#ifndef STFTCB_TEXT
 static uint16_t get_symbol_id(char c);
 
 #if STFTCB_TEXT_ORIENTATION
@@ -45,18 +45,16 @@ void STFTCB_init() {
 }
 
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
- *                            B12 ---> RESET | RST | RES - аппаратный сброс (сброс на низком уровне)
- *                            B14 ---> D/C   | AO  | RS  - Выбор данных/команды. (некоторые ЖК-платы \
- *                                                         называют это постоянным током или D / C). При \
- *                                                         подаче высокого напряжения это означает отправку \
- *                                                         данных, при подаче низкого напряжения это \
- *                                                         означает отправку команды.
- *                            B15 ---> SPI_SS(CS)        - Выбор микросхемы (некоторые ЖК-дисплеи называют \
- *                                                         это SS)
  * */
 static void STFTCB_GPIO_init() {
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN;
-    GPIOB->MODER |= (GPIO_MODER_MODER12_0 | GPIO_MODER_MODER14_0 | GPIO_MODER_MODER15_0);
+	STFTCB_RESET_RCC;
+	STFTCB_RESET_MODER;
+
+	STFTCB_DC_RCC;
+	STFTCB_DC_MODER;
+
+	STFTCB_CS_RCC;
+	STFTCB_CS_MODER;
 }
 
 /** @brief STFTCB_memset_0 - обнуление массива
@@ -67,9 +65,9 @@ static void STFTCB_memset0() {
 }
 
 static void STFTCB_DMA_init() {
-    DMA2_Stream3->M0AR = (uint32_t)&stftcb_array_tx_0[0];
-    DMA2_Stream3->M1AR = (uint32_t)&stftcb_array_tx_1[0];
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->M0AR = (uint32_t)&stftcb_array_tx_0[0];
+    STFTCB_SPI_DMA_SxCR->M1AR = (uint32_t)&stftcb_array_tx_1[0];
+	STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
 }
 
 void stftcb_sendCmd1byte(uint8_t cmd) {
@@ -112,7 +110,7 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     stftcb_sendData1byte(((x1) & 0x00FF));
 #endif
 
-    stftcb_sendCmd1byte(STFTCB_PASET);  // Row addr set
+    stftcb_sendCmd1byte(STFTCB_RASET);  // Raw addr set
 #if (STFTCB_HEIGHT < 0xFF)
     stftcb_sendData1byte(0x00);
     stftcb_sendData1byte((y0));
@@ -163,23 +161,22 @@ void stftcb_updateFrame() {
 
     SPI_2byte_mode_on();
     STFTCB_DC_ON;
-    DMA2_Stream3->CR &= ~DMA_SxCR_EN;
-	while ((DMA2_Stream3->CR) & DMA_SxCR_EN){;}
+    STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
+	while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
 
     if (stftcb_array_tx_mxar == 0) {
-        DMA2_Stream3->CR &= ~DMA_SxCR_CT;
+        STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_CT;
         stftcb_array_tx_mxar = 0x01;
     } else {
-        DMA2_Stream3->CR |= DMA_SxCR_CT;
+        STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_CT;
         stftcb_array_tx_mxar = 0x00;
     }
 
     stftcb_array_tx_status = 0x11;
-	DMA2_Stream3->NDTR = STFTCB_SIZE;
-    DMA2_Stream3->CR |= DMA_SxCR_MINC;
-    DMA2_Stream3->CR |= DMA_SxCR_EN;
+	STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_MINC;
+    STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_EN;
 }
-
 
 /*=========================================================================================================*/
 /*                              Функции отрисовки объектов в кадре                                         */
@@ -593,15 +590,10 @@ void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
     }
 }
 
-#if STFTCB_TEXT
+#ifndef STFTCB_TEXT
 /*=========================================================================================================*/
 /*                                              Шрифты                                                     */
 /*=========================================================================================================*/
-#define STFTCB_TEXT_COLOR           0xFFFF
-#define STFTCB_TEXT_ORIENTATION     0x01  // 0x00 горизонтальный | 0x01 вертикальный
-#define STFTCB_TEXT_FLIP_HORIZONTAL 0x00  // 0x00 к VCC | 0x01 к LED
-#define STFTCB_TEXT_FLIP_VERTICAL   0x01  // Отзеркаливание текста
-
 static uint16_t get_symbol_id(char c) {
     switch (c) {
         case 32:
