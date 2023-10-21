@@ -11,31 +11,53 @@
 //// Выбор модели дисплея
 /* Выбрать модель контроллера и выставить 1 на нем, в противном случае 0
  * */
-#define ST7735S__080x160  (0)  // 0.96 // 1
-#define ST7789V__240x240  (0)  // 1.3  // 2
-#define ST7735___128x160  (1)  // 1.6  // 3
-#define ST7789V3_240x280  (0)  // 1.69 // 4
-#define ILI9341__240x320  (0)  // 2.2  // 5
-#define ST7789___240x320  (0)  // 2.4  // 6
-#define ILI9488__320x480  (0)  // 3.5  // 7
+#define ST7735S__080x160  (0)  // 0.96 // 0x01
+#define ST7789V__240x240  (0)  // 1.3  // 0x02
+#define ST7735___128x160  (1)  // 1.6  // 0x03
+#define ST7789V3_240x280  (0)  // 1.69 // 0x04
+#define ILI9341__240x320  (0)  // 2.2  // 0x05
+#define ST7789___240x320  (0)  // 2.4  // 0x06
+#define ILI9488__320x480  (0)  // 3.5  // 0x07
 
-#if   ST7735S__080x160 
-  #include "st7735s_reg.h"
+/* STFTCB_DISPLAY_MODEL - Модель дисплея из списка выше ^
+ * STFTCB_ILIST_DEVICE - 0x01 - ILI; 0x00 ST
+ * */
+
+#if   ST7735S__080x160
+  #define STFTCB_HEIGHT        160   // Y
+  #define STFTCB_WIDTH         80    // X
+  #define STFTCB_DISPLAY_MODEL 0x01
+  #define STFTCB_ILIST_DEVICE  0x00
 #elif ST7789V__240x240
-  #include "st7789v_reg.h"
+  #define STFTCB_HEIGHT        240   // Y
+  #define STFTCB_WIDTH         240   // X
+  #define STFTCB_DISPLAY_MODEL 0x02
+  #define STFTCB_ILIST_DEVICE  0x00
 #elif ST7735___128x160
-  #include "st7735_register.h"
-
-  #define STFTCB_HEIGHT ST7735_HEIGHT // Ось Y
-  #define STFTCB_WIDTH  ST7735_WIDTH  // Ось X
+  #define STFTCB_HEIGHT        160   // Y
+  #define STFTCB_WIDTH         128   // X
+  #define STFTCB_DISPLAY_MODEL 0x03
+  #define STFTCB_ILIST_DEVICE  0x00
 #elif ST7789V3_240x280
-  #include "st7789v3_reg.h"
+  #define STFTCB_HEIGHT        280   // Y
+  #define STFTCB_WIDTH         240   // X
+  #define STFTCB_DISPLAY_MODEL 0x04
+  #define STFTCB_ILIST_DEVICE  0x00
 #elif ILI9341__240x320
-  #include "ili9341_reg.h"
+  #define STFTCB_HEIGHT        320   // Y
+  #define STFTCB_WIDTH         240   // X
+  #define STFTCB_DISPLAY_MODEL 0x05
+  #define STFTCB_ILIST_DEVICE  0x01
 #elif ST7789___240x320
-  #include "st7789_reg.h"
+  #define STFTCB_HEIGHT        320   // Y
+  #define STFTCB_WIDTH         240   // X
+  #define STFTCB_DISPLAY_MODEL 0x06
+  #define STFTCB_ILIST_DEVICE  0x00
 #elif ILI9488__320x480
-  #include "ili9488_reg.h"
+  #define STFTCB_HEIGHT        480   // Y
+  #define STFTCB_WIDTH         320   // X
+  #define STFTCB_DISPLAY_MODEL 0x07
+  #define STFTCB_ILIST_DEVICE  0x01
 #endif
 
 // Общий размер массива
@@ -65,30 +87,30 @@
 #define STFTCB_RAMRD 0x2E
 
 //// Посчитанные заранее цвета в формате RGB565
-#define STFTCB_COLOR_WHITE      0xFFFF
-#define STFTCB_COLOR_BLACK      0x0000
-#define STFTCB_COLOR_BLUE       0x001F
-#define STFTCB_COLOR_BRED       0xF81F
-#define STFTCB_COLOR_GRED 		0xFFE0
-#define STFTCB_COLOR_GBLUE		0x07FF
-#define STFTCB_COLOR_RED        0xF800
-#define STFTCB_COLOR_MAGENTA    0xF81F
-#define STFTCB_COLOR_GREEN      0x07E0
-#define STFTCB_COLOR_CYAN       0x7FFF
-#define STFTCB_COLOR_YELLOW     0xFFE0
-#define STFTCB_COLOR_BROWN 		0xBC40
-#define STFTCB_COLOR_BRRED 		0xFC07
-#define STFTCB_COLOR_GRAY  		0x8430
-#define STFTCB_COLOR_GRAY0      0xEF7D
-#define STFTCB_COLOR_GRAY1      0x8410
-#define STFTCB_COLOR_GRAY2      0x4208
-#define STFTCB_COLOR_DARKBLUE   0x01CF
-#define STFTCB_COLOR_LIGHTBLUE  0x7D7C
-#define STFTCB_COLOR_GRAYBLUE   0x5458
-#define STFTCB_COLOR_LIGHTGREEN 0x841F
-#define STFTCB_COLOR_LIGHTGRAY  0xEF5B
-#define STFTCB_COLOR_LGRAY 	    0xC618
-#define STFTCB_COLOR_LGRAYBLUE  0xA651
+#define STFTCB_COLOR_WHITE          0xFFFF
+#define STFTCB_COLOR_BLACK          0x0000
+#define STFTCB_COLOR_BLUE           0x001F
+#define STFTCB_COLOR_BRED           0xF81F
+#define STFTCB_COLOR_GRED 		    0xFFE0
+#define STFTCB_COLOR_GBLUE		    0x07FF
+#define STFTCB_COLOR_RED            0xF800
+#define STFTCB_COLOR_MAGENTA        0xF81F
+#define STFTCB_COLOR_GREEN          0x07E0
+#define STFTCB_COLOR_CYAN           0x7FFF
+#define STFTCB_COLOR_YELLOW         0xFFE0
+#define STFTCB_COLOR_BROWN 		    0xBC40
+#define STFTCB_COLOR_BRRED 		    0xFC07
+#define STFTCB_COLOR_GRAY  		    0x8430
+#define STFTCB_COLOR_GRAY0          0xEF7D
+#define STFTCB_COLOR_GRAY1          0x8410
+#define STFTCB_COLOR_GRAY2          0x4208
+#define STFTCB_COLOR_DARKBLUE       0x01CF
+#define STFTCB_COLOR_LIGHTBLUE      0x7D7C
+#define STFTCB_COLOR_GRAYBLUE       0x5458
+#define STFTCB_COLOR_LIGHTGREEN     0x841F
+#define STFTCB_COLOR_LIGHTGRAY      0xEF5B
+#define STFTCB_COLOR_LGRAY 	        0xC618
+#define STFTCB_COLOR_LGRAYBLUE      0xA651
 
 //// Интерфейс STFTCB
 // SPI
@@ -163,18 +185,6 @@
 /* Прерывания при ошибке FIFO */
 #define STFTCB_SPI_DMA_FEIF         (DMA2->LISR & (DMA_LISR_FEIF3))
 #define STFTCB_SPI_DMA_CFEIF        DMA2->LIFCR |= (DMA_LIFCR_CFEIF3)
-
-/** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
- *                            B12 ---> RESET | RST | RES - аппаратный сброс (сброс на низком уровне)
- *                            B14 ---> D/C   | AO  | RS  - Выбор данных/команды. (некоторые ЖК-платы \
- *                                                         называют это постоянным током или D / C). При \
- *                                                         подаче высокого напряжения это означает отправку \
- *                                                         данных, при подаче низкого напряжения это \
- *                                                         означает отправку команды.
- *                            B15 ---> SPI_SS(CS)        - Выбор микросхемы (некоторые ЖК-дисплеи называют \
- *                                                         это SS)
- * */
-
 
 // RESET | RST | RES
 /* Аппаратный сброс (сброс на низком уровне)
