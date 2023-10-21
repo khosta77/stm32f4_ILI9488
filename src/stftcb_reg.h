@@ -81,10 +81,52 @@
 #define STFTCB_POINT(arr, y, x) (arr[((y * ST7735_WIDTH) + x)])
 
 //// Макросы для работы с дисплеем
+#define STFTCB_NOP
+#define STFTCB_SOFTRES
+#define STFTCB_RDII
+#define STFTCB_RDS
+#define STFTCB_RDPW
+#define STFTCB_RDMADCTL
+#define STFTCB_RDPF
+#define STFTCB_RDIF
+#define STFTCB_RDSM
+#define STFTCB_RDSDR
+#define STFTCB_ESM
+#define STFTCB_SO
+#define STFTCB_PMO
+#define STFTCB_NDMO
+#define STFTCB_IDOFF
+#define STFTCB_IDON
 #define STFTCB_CASET 0x2A
 #define STFTCB_RASET 0x2B
 #define STFTCB_RAMWR 0x2C
+#define STFTCB_COLORSET
 #define STFTCB_RAMRD 0x2E
+#define STFTCB_PARAREA
+#define STFTCB_VSD
+#define STFTCB_TELOFF
+#define STFTCB_TELON
+#define STFTCB_RAMAC
+#define STFTCB_VSSA
+#define STFTCB_IMOFF
+#define STFTCB_IMON
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
+#define STFTCB_
 
 //// Посчитанные заранее цвета в формате RGB565
 #define STFTCB_COLOR_WHITE          0xFFFF
