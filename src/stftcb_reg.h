@@ -11,57 +11,56 @@
 //// Выбор модели дисплея
 /* Выбрать модель контроллера и выставить 1 на нем, в противном случае 0
  * */
-#define ST7735S__080x160  (0)  // 0.96 // 0x01
-#define ST7789V__240x240  (0)  // 1.3  // 0x02
-#define ST7735___128x160  (1)  // 1.6  // 0x03
-#define ST7789V3_240x280  (0)  // 1.69 // 0x04
-#define ILI9341__240x320  (0)  // 2.2  // 0x05
-#define ST7789___240x320  (0)  // 2.4  // 0x06
-#define ILI9488__320x480  (0)  // 3.5  // 0x07
+#define ST7735S__080x160            (0)  // 0.96 // 0x01
+#define ST7789V__240x240            (0)  // 1.3  // 0x02
+#define ST7735___128x160            (1)  // 1.6  // 0x03
+#define ST7789V3_240x280            (0)  // 1.69 // 0x04
+#define ILI9341__240x320            (0)  // 2.2  // 0x05
+#define ST7789___240x320            (0)  // 2.4  // 0x06
+#define ILI9488__320x480            (0)  // 3.5  // 0x07
 
 /* STFTCB_DISPLAY_MODEL - Модель дисплея из списка выше ^
  * STFTCB_ILIST_DEVICE - 0x01 - ILI; 0x00 ST
  * */
-
 #if   ST7735S__080x160
-  #define STFTCB_HEIGHT        160   // Y
-  #define STFTCB_WIDTH         80    // X
-  #define STFTCB_DISPLAY_MODEL 0x01
-  #define STFTCB_ILIST_DEVICE  0x00
+  #define STFTCB_HEIGHT             160   // Y
+  #define STFTCB_WIDTH              80    // X
+  #define STFTCB_DISPLAY_MODEL      0x01
+  #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7789V__240x240
-  #define STFTCB_HEIGHT        240   // Y
-  #define STFTCB_WIDTH         240   // X
-  #define STFTCB_DISPLAY_MODEL 0x02
-  #define STFTCB_ILIST_DEVICE  0x00
+  #define STFTCB_HEIGHT             240   // Y
+  #define STFTCB_WIDTH              240   // X
+  #define STFTCB_DISPLAY_MODEL      0x02
+  #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7735___128x160
-  #define STFTCB_HEIGHT        160   // Y
-  #define STFTCB_WIDTH         128   // X
-  #define STFTCB_DISPLAY_MODEL 0x03
-  #define STFTCB_ILIST_DEVICE  0x00
+  #define STFTCB_HEIGHT             160   // Y
+  #define STFTCB_WIDTH              128   // X
+  #define STFTCB_DISPLAY_MODEL      0x03
+  #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7789V3_240x280
-  #define STFTCB_HEIGHT        280   // Y
-  #define STFTCB_WIDTH         240   // X
-  #define STFTCB_DISPLAY_MODEL 0x04
-  #define STFTCB_ILIST_DEVICE  0x00
+  #define STFTCB_HEIGHT             280   // Y
+  #define STFTCB_WIDTH              240   // X
+  #define STFTCB_DISPLAY_MODEL      0x04
+  #define STFTCB_ILIST_DEVICE       0x00
 #elif ILI9341__240x320
-  #define STFTCB_HEIGHT        320   // Y
-  #define STFTCB_WIDTH         240   // X
-  #define STFTCB_DISPLAY_MODEL 0x05
-  #define STFTCB_ILIST_DEVICE  0x01
+  #define STFTCB_HEIGHT             320   // Y
+  #define STFTCB_WIDTH              240   // X
+  #define STFTCB_DISPLAY_MODEL      0x05
+  #define STFTCB_ILIST_DEVICE       0x01
 #elif ST7789___240x320
-  #define STFTCB_HEIGHT        320   // Y
-  #define STFTCB_WIDTH         240   // X
-  #define STFTCB_DISPLAY_MODEL 0x06
-  #define STFTCB_ILIST_DEVICE  0x00
+  #define STFTCB_HEIGHT             320   // Y
+  #define STFTCB_WIDTH              240   // X
+  #define STFTCB_DISPLAY_MODEL      0x06
+  #define STFTCB_ILIST_DEVICE       0x00
 #elif ILI9488__320x480
-  #define STFTCB_HEIGHT        480   // Y
-  #define STFTCB_WIDTH         320   // X
-  #define STFTCB_DISPLAY_MODEL 0x07
-  #define STFTCB_ILIST_DEVICE  0x01
+  #define STFTCB_HEIGHT             480   // Y
+  #define STFTCB_WIDTH              320   // X
+  #define STFTCB_DISPLAY_MODEL      0x07
+  #define STFTCB_ILIST_DEVICE       0x01
 #endif
 
 // Общий размер массива
-#define STFTCB_SIZE   (STFTCB_HEIGHT * STFTCB_WIDTH)
+#define STFTCB_SIZE                 (STFTCB_HEIGHT * STFTCB_WIDTH)
 
 // Макрос для удобного работа с точкой, в некоторых случаях
 /* Display position
@@ -78,85 +77,88 @@
  *  +---------------+
  *     <STFTCBus>
  * */
-#define STFTCB_POINT(arr, y, x) (arr[((y * ST7735_WIDTH) + x)])
+#define STFTCB_POINT(arr, y, x)     (arr[((y * ST7735_WIDTH) + x)])
 
 //// Макросы для работы с дисплеем
 // Level 1
-#define STFTCB_NOP
-#define STFTCB_SOFTRES
-#define STFTCB_RDII
-#define STFTCB_RDS
-#define STFTCB_RDPW
-#define STFTCB_RDMADCTL
-#define STFTCB_RDPF
-#define STFTCB_RDIF
-#define STFTCB_RDSM
-#define STFTCB_RDSDR
-#define STFTCB_ESM
-#define STFTCB_SO
-#define STFTCB_PMO
-#define STFTCB_NDMO
-#define STFTCB_IDOFF
-#define STFTCB_IDON
-#define STFTCB_CASET 0x2A
-#define STFTCB_RASET 0x2B
-#define STFTCB_RAMWR 0x2C
-#define STFTCB_COLORSET
-#define STFTCB_RAMRD 0x2E
-#define STFTCB_PARAREA
-#define STFTCB_VSD
-#define STFTCB_TELOFF
-#define STFTCB_TELON
-#define STFTCB_RAMAC
-#define STFTCB_VSSA
-#define STFTCB_IMOFF
-#define STFTCB_IMON
-#define STFTCB_COLMODPFS
-#define STFTCB_RAMWC
-#define STFTCB_RAMRC
-#define STFTCB_STEARSCAN
-#define STFTCB_GSCAN
-#define STFTCB_WDISBRIG
-#define STFTCB_RDISBRIG
-#define STFTCB_WCTRLDIS
-#define STFTCB_RCTRLDIS
-#define STFTCB_WCABC
-#define STFTCB_RCABC
-#define STFTCB_WCABCMB
-#define STFTCB_RCABCMB
-#define STFTCB_RID1
-#define STFTCB_RID2
-#define STFTCB_RID3
+#define STFTCB_NOP                  0x00  // NOP
+#define STFTCB_SOFTRES              0x01  // Software Reset
+#define STFTCB_RDII                 0x04  // Read display identification information
+#define STFTCB_RDS                  0x09  // Read Display Status
+#define STFTCB_RDPW                 0x0A  // Read Display Power Mode
+#define STFTCB_RDMADCTL             0x0B  // Read Display MADCTL
+#define STFTCB_RDPF                 0x0C  // Read Display Pixel Format
+#define STFTCB_RDIF                 0x0D  // Read Display Image Format
+#define STFTCB_RDSM                 0x0E  // Read Display Signal Mode
+#define STFTCB_RDSDR                0x0F  // Read Display Self-Diagnostic Result
+#define STFTCB_ESM                  0x10  // Enter Sleep Mode
+#define STFTCB_SO                   0x11  // Sleep Out
+#define STFTCB_PMO                  0x12  // Partial Mode ON
+#define STFTCB_NDMO                 0x13  // Normal Display Mode ON
+#define STFTCB_DIOFF                0x20  // Display Inversion OFF
+#define STFTCB_DION                 0x21  // Display Inversion ON
+#define STFTCB_GAMMS                0x26  // Gamma Set
+#define STFTCB_DOFF                 0x28  // Display OFF
+#define STFTCB_DON                  0x29  // Display ON
+#define STFTCB_CASET                0x2A  // Column Address Set
+#define STFTCB_RASET                0x2B  // Page Address Set
+#define STFTCB_RAMWR                0x2C  // Memory Write
+#define STFTCB_COLORSET             0x2D  // Color Set
+#define STFTCB_RAMRD                0x2E  // Memory Read 
+#define STFTCB_PARAREA              0x30  // Partial Area
+#define STFTCB_VSD                  0x33  // Vertical Scrolling Definition
+#define STFTCB_TELOFF               0x34  // Tearing Effect Line OFF
+#define STFTCB_TELON                0x35  // Tearing Effect Line ON
+#define STFTCB_RAMAC                0x36  // Memory Access Control
+#define STFTCB_VSSA                 0x37  // Vertical Scrolling Start Address
+#define STFTCB_IMOFF                0x38  // Idle Mode OFF
+#define STFTCB_IMON                 0x39  // Idle Mode ON
+#define STFTCB_COLMODPFS            0x3A  // COLMOD: Pixel Format Set 
+#define STFTCB_RAMWC                0x3C  // Write_Memory_Continue
+#define STFTCB_RAMRC                0x3E  // Read_Memory_Continue
+#define STFTCB_STEARSCAN            0x44  // Set_Tear_Scanline
+#define STFTCB_GSCAN                0x45  // Get_Scanline
+#define STFTCB_WDISBRIG             0x51  // Write Display Brightness
+#define STFTCB_RDISBRIG             0x52  // Read Display Brightness
+#define STFTCB_WCTRLDIS             0x53  // Write CTRL Display
+#define STFTCB_RCTRLDIS             0x54  // Read CTRL Display
+#define STFTCB_WCABC                0x55  // Write Content Adaptive Brightness Control 
+#define STFTCB_RCABC                0x56  // Read Content Adaptive Brightness Control 
+#define STFTCB_WCABCMB              0x5E  // Write CABC Minimum Brightness
+#define STFTCB_RCABCMB              0x5F  // Read CABC Minimum Brightness
+#define STFTCB_RID1                 0xDA  // Read ID1 
+#define STFTCB_RID2                 0xDB  // Read ID2 
+#define STFTCB_RID3                 0xDC  // ReadID3
+
 // Level 2
-#define STFTCB_RGBISC
-#define STFTCB_FRC1
-#define STFTCB_FRC2
-#define STFTCB_FRC3
-#define STFTCB_DISINVC
-#define STFTCB_BLANKPORCHC
-#define STFTCB_DISFUNC
-#define STFTCB_ENTRYMS
-#define STFTCB_BC1
-#define STFTCB_BC2
-#define STFTCB_BC3
-#define STFTCB_BC4
-#define STFTCB_BC5
-#define STFTCB_BC6
-#define STFTCB_BC7
-#define STFTCB_BC8
-#define STFTCB_PC1
-#define STFTCB_PC2
-#define STFTCB_VCOMC1
-#define STFTCB_VCOM2
-#define STFTCB_NVMW
-#define STFTCB_NVMPK
-#define STFTCB_NVMSR
-#define STFTCB_RID4
-#define STFTCB_PGC
-#define STFTCB_NGC
-#define STFTCB_DGC1
-#define STFTCB_DGC2
-#define STFTCB_IC
+#define STFTCB_RGBISC               0xB0  // RGB Interface Signal Control 
+#define STFTCB_FRC1                 0xB1  // Frame Rate Control (In Normal Mode/Full Colors)
+#define STFTCB_FRC2                 0xB2  // Frame Rate Control (In Idle Mode/8 colors)
+#define STFTCB_FRC3                 0xB3  // Frame Rate control (In Partial Mode/Full Colors)
+#define STFTCB_DISINVC              0xB4  // Display Inversion Control 
+#define STFTCB_BLANKPORCHC          0xB5  // Blanking Porch Control
+#define STFTCB_DISFUNC              0xB6  // Display Function Control 
+#define STFTCB_ENTRYMS              0xB7  // Entry Mode Set
+#define STFTCB_BC1                  0xB8  // Backlight Control 1
+#define STFTCB_BC2                  0xB9  // Backlight Control 2
+#define STFTCB_BC3                  0xBA  // Backlight Control 3
+#define STFTCB_BC4                  0xBB  // Backlight Control 4
+#define STFTCB_BC5                  0xBC  // Backlight Control 5
+#define STFTCB_BC7                  0xBE  // Backlight Control 7
+#define STFTCB_BC8                  0xBF  // Backlight Control 8
+#define STFTCB_PC1                  0xC0  // Power Control 1
+#define STFTCB_PC2                  0xC1  // Power Control 2
+#define STFTCB_VCOMC1               0xC5  // VCOM Control 1
+#define STFTCB_VCOM2                0xC7  // VCOM Control 2
+#define STFTCB_NVMW                 0xD0  // NV Memory Write
+#define STFTCB_NVMPK                0xD1  // NV Memory Protection Key
+#define STFTCB_NVMSR                0xD2  // NV Memory Status Read
+#define STFTCB_RID4                 0xD3  // Read ID4
+#define STFTCB_PGC                  0xE0  // Positive Gamma Correction
+#define STFTCB_NGC                  0xE1  // Negative Gamma Correction
+#define STFTCB_DGC1                 0xE2  // Digital Gamma Control 1
+#define STFTCB_DGC2                 0xE3  // Digital Gamma Control 2
+#define STFTCB_IC                   0xF6  // Interface Control
 
 //// Посчитанные заранее цвета в формате RGB565
 #define STFTCB_COLOR_WHITE          0xFFFF
