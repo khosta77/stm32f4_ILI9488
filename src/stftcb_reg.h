@@ -81,6 +81,7 @@
 #define STFTCB_POINT(arr, y, x) (arr[((y * ST7735_WIDTH) + x)])
 
 //// Макросы для работы с дисплеем
+// Level 1
 #define STFTCB_NOP
 #define STFTCB_SOFTRES
 #define STFTCB_RDII
@@ -110,23 +111,52 @@
 #define STFTCB_VSSA
 #define STFTCB_IMOFF
 #define STFTCB_IMON
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
-#define STFTCB_
+#define STFTCB_COLMODPFS
+#define STFTCB_RAMWC
+#define STFTCB_RAMRC
+#define STFTCB_STEARSCAN
+#define STFTCB_GSCAN
+#define STFTCB_WDISBRIG
+#define STFTCB_RDISBRIG
+#define STFTCB_WCTRLDIS
+#define STFTCB_RCTRLDIS
+#define STFTCB_WCABC
+#define STFTCB_RCABC
+#define STFTCB_WCABCMB
+#define STFTCB_RCABCMB
+#define STFTCB_RID1
+#define STFTCB_RID2
+#define STFTCB_RID3
+// Level 2
+#define STFTCB_RGBISC
+#define STFTCB_FRC1
+#define STFTCB_FRC2
+#define STFTCB_FRC3
+#define STFTCB_DISINVC
+#define STFTCB_BLANKPORCHC
+#define STFTCB_DISFUNC
+#define STFTCB_ENTRYMS
+#define STFTCB_BC1
+#define STFTCB_BC2
+#define STFTCB_BC3
+#define STFTCB_BC4
+#define STFTCB_BC5
+#define STFTCB_BC6
+#define STFTCB_BC7
+#define STFTCB_BC8
+#define STFTCB_PC1
+#define STFTCB_PC2
+#define STFTCB_VCOMC1
+#define STFTCB_VCOM2
+#define STFTCB_NVMW
+#define STFTCB_NVMPK
+#define STFTCB_NVMSR
+#define STFTCB_RID4
+#define STFTCB_PGC
+#define STFTCB_NGC
+#define STFTCB_DGC1
+#define STFTCB_DGC2
+#define STFTCB_IC
 
 //// Посчитанные заранее цвета в формате RGB565
 #define STFTCB_COLOR_WHITE          0xFFFF
