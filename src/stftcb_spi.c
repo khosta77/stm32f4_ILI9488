@@ -19,7 +19,7 @@ static void SPI_SPI_init() {
     // 3. Сброс битов, которые могут испортить передачу
     STFTCB_SPI->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
     // 3. настрока DMA
-	STFTCB_SPI->CR2 |= (SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+    STFTCB_SPI->CR2 |= (SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
     // 4. Настройка CR1
     // - SPI_CR1_MSTR - мастер мод
     // - SPI_CR1_SSM - Разрешает программное управление slave устройством
@@ -50,8 +50,8 @@ static void SPI_DMA_init() {
     //RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
     // Отключаем DMA, для передачи
-	STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
-	while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
+    STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
+    while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
     // Настройка контрольных регистров
     // - (0x03 << 25)     - настройка DMA канала, для SP1_TX
     // - DMA_SxCR_MINC    - Memory INCrement mode
@@ -65,15 +65,15 @@ static void SPI_DMA_init() {
     // - DMA_SxCR_HTIE    -
     // - DMA_SxCR_TEIE    -
     // - DMA_SxCR_DMEIE   -
-	STFTCB_SPI_DMA_SxCR->CR = (STFTCB_SPI_DMA_SxCR_CH | DMA_SxCR_MINC | DMA_SxCR_DIR_0 |
+    STFTCB_SPI_DMA_SxCR->CR = (STFTCB_SPI_DMA_SxCR_CH | DMA_SxCR_MINC | DMA_SxCR_DIR_0 |
                                DMA_SxCR_MSIZE_0 | DMA_SxCR_PSIZE_0 | DMA_SxCR_TCIE);
-	//DMA2_Stream3->FCR = 0;
-	//DMA2_Stream3->FCR &= ~DMA_SxFCR_DMDIS;
+    //DMA2_Stream3->FCR = 0;
+    //DMA2_Stream3->FCR &= ~DMA_SxFCR_DMDIS;
 
     STFTCB_SPI_DMA_CTCIF;  // Включаем прерывание после успешной передачи передачи
     //DMA2->LIFCR |= DMA_LIFCR_CTCIF3;  
-	STFTCB_SPI_DMA_SxCR->PAR = (uint32_t)&STFTCB_SPI->DR;
-	NVIC_EnableIRQ(STFTCB_SPI_DMA_IRQN);
+    STFTCB_SPI_DMA_SxCR->PAR = (uint32_t)&STFTCB_SPI->DR;
+    NVIC_EnableIRQ(STFTCB_SPI_DMA_IRQN);
     NVIC_SetPriority(STFTCB_SPI_DMA_IRQN, 2);
 }
 

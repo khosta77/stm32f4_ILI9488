@@ -9,9 +9,6 @@ void drawRectangleFill();
 void drawCicleNoFill();
 void drawCicleFill();
 
-
-
-
 uint16_t colors[] = {
 //    STFTCB_COLOR_BLACK,
     STFTCB_COLOR_WHITE,
@@ -37,10 +34,10 @@ int main(void) {
 
     char *c = "890";
 
-	while(1) {
+    while(1) {
         printT(0,0, &c[0]);
         stftcb_updateFrame();
-	}
+    }
 }
 
 void rainbow() {
@@ -151,7 +148,7 @@ void drawRectangleFill() {
             GPIOD->ODR |= GPIO_ODR_OD14;
         stftcb_DrawFillBackground(0x0000);
         GPIOD->ODR |= GPIO_ODR_OD12;
-    }  
+    }
 }
 
 void drawCicleNoFill() {
@@ -186,7 +183,7 @@ void drawCicleFill() {
             GPIOD->ODR |= GPIO_ODR_OD14;
         stftcb_DrawFillBackground(0x0000);
         GPIOD->ODR |= GPIO_ODR_OD12;
-    }  
+    }
 }
 
 

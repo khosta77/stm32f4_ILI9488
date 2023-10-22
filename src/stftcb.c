@@ -49,14 +49,14 @@ void STFTCB_init() {
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
  * */
 static void STFTCB_GPIO_init() {
-	STFTCB_RESET_RCC;
-	STFTCB_RESET_MODER;
+    STFTCB_RESET_RCC;
+    STFTCB_RESET_MODER;
 
-	STFTCB_DC_RCC;
-	STFTCB_DC_MODER;
+    STFTCB_DC_RCC;
+    STFTCB_DC_MODER;
 
-	STFTCB_CS_RCC;
-	STFTCB_CS_MODER;
+    STFTCB_CS_RCC;
+    STFTCB_CS_MODER;
 }
 
 /** @brief STFTCB_memset_0 - обнуление массива
@@ -74,9 +74,9 @@ static void STFTCB_DMA_init() {
 
 static void STFTCB_TFT_init() {
     STFTCB_CS_OFF;
-	STFTCB_RESET_OFF;
-	STFTCB_DELAY(7);
-	STFTCB_RESET_ON;
+    STFTCB_RESET_OFF;
+    STFTCB_DELAY(7);
+    STFTCB_RESET_ON;
     STFTCB_DELAY(20000);
 
     stftcb_sendCmd1byte(STFTCB_SO);
@@ -125,7 +125,7 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 #else
     stftcb_sendData1byte(((0xFF00 & (x0)) >> 8));
     stftcb_sendData1byte(((x0) & 0x00FF));
-	stftcb_sendData1byte(((0xFF00 & (x1)) >> 8));
+    stftcb_sendData1byte(((0xFF00 & (x1)) >> 8));
     stftcb_sendData1byte(((x1) & 0x00FF));
 #endif
 
@@ -148,7 +148,7 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 void stftcb_SetFullAddressWindow() {
     SPI_1byte_mode_on();
     stftcb_sendCmd1byte(STFTCB_CASET);              // Column addr set
-	stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);
     stftcb_sendData1byte(0x00);                     // XSTART XS7 ~ XS0
 #if (STFTCB_WIDTH < 0xFF)
     stftcb_sendData1byte(0x00);
@@ -169,7 +169,7 @@ void stftcb_SetFullAddressWindow() {
     stftcb_sendData1byte(((STFTCB_HEIGHT - 1) & 0x00FF));         // YEND
 #endif
 
-	stftcb_sendCmd1byte(STFTCB_RAMWR);
+    stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
 
 /** @brief stftcb_updateFrame - функция обновления кадра
@@ -181,7 +181,7 @@ void stftcb_updateFrame() {
     SPI_2byte_mode_on();
     STFTCB_DC_ON;
     STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
-	while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
+    while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
 
     if (stftcb_array_tx_mxar == 0) {
         STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_CT;

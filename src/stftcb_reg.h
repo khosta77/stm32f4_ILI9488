@@ -166,16 +166,16 @@
 #define STFTCB_COLOR_BLACK          0x0000
 #define STFTCB_COLOR_BLUE           0x001F
 #define STFTCB_COLOR_BRED           0xF81F
-#define STFTCB_COLOR_GRED 		    0xFFE0
-#define STFTCB_COLOR_GBLUE		    0x07FF
+#define STFTCB_COLOR_GRED           0xFFE0
+#define STFTCB_COLOR_GBLUE          0x07FF
 #define STFTCB_COLOR_RED            0xF800
 #define STFTCB_COLOR_MAGENTA        0xF81F
 #define STFTCB_COLOR_GREEN          0x07E0
 #define STFTCB_COLOR_CYAN           0x7FFF
 #define STFTCB_COLOR_YELLOW         0xFFE0
-#define STFTCB_COLOR_BROWN 		    0xBC40
-#define STFTCB_COLOR_BRRED 		    0xFC07
-#define STFTCB_COLOR_GRAY  		    0x8430
+#define STFTCB_COLOR_BROWN          0xBC40
+#define STFTCB_COLOR_BRRED          0xFC07
+#define STFTCB_COLOR_GRAY           0x8430
 #define STFTCB_COLOR_GRAY0          0xEF7D
 #define STFTCB_COLOR_GRAY1          0x8410
 #define STFTCB_COLOR_GRAY2          0x4208
@@ -184,7 +184,7 @@
 #define STFTCB_COLOR_GRAYBLUE       0x5458
 #define STFTCB_COLOR_LIGHTGREEN     0x841F
 #define STFTCB_COLOR_LIGHTGRAY      0xEF5B
-#define STFTCB_COLOR_LGRAY 	        0xC618
+#define STFTCB_COLOR_LGRAY          0xC618
 #define STFTCB_COLOR_LGRAYBLUE      0xA651
 
 //// Интерфейс STFTCB
@@ -219,7 +219,7 @@
  * */
 #define STFTCB_SPI_GPIO_SCK_RCC     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN
 #define STFTCB_SPI_GPIO_SCK_MODER   GPIOA->MODER |= GPIO_MODER_MODER5_1
-#define STFTCB_SPI_GPIO_SCK_AFR 	GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL5_2 | GPIO_AFRL_AFSEL5_0)
+#define STFTCB_SPI_GPIO_SCK_AFR     GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL5_2 | GPIO_AFRL_AFSEL5_0)
 
 #define STFTCB_SPI_GPIO_MISO_RCC    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN
 #define STFTCB_SPI_GPIO_MISO_MODER  GPIOA->MODER |= GPIO_MODER_MODER6_1
@@ -227,7 +227,7 @@
 
 #define STFTCB_SPI_GPIO_MOSI_RCC    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN
 #define STFTCB_SPI_GPIO_MOSI_MODER  GPIOA->MODER |= GPIO_MODER_MODER7_1
-#define STFTCB_SPI_GPIO_MOSI_AFR 	GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL7_2 | GPIO_AFRL_AFSEL7_0)
+#define STFTCB_SPI_GPIO_MOSI_AFR    GPIOA->AFR[0] |= (GPIO_AFRL_AFSEL7_2 | GPIO_AFRL_AFSEL7_0)
 
 /* Поток DMA, для SPI1 выбран DMA2_Stream3
  * */
@@ -277,7 +277,7 @@
  * */
 #define STFTCB_DC_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
 #define STFTCB_DC_MODER             GPIOB->MODER |= GPIO_MODER_MODER14_0
-#define	STFTCB_DC_ON	            GPIOB->ODR |= GPIO_ODR_OD14
+#define	STFTCB_DC_ON                GPIOB->ODR |= GPIO_ODR_OD14
 #define	STFTCB_DC_OFF               GPIOB->ODR &= ~GPIO_ODR_OD14
 
 // SPI_SS(CS)
@@ -286,8 +286,8 @@
  * */
 #define STFTCB_CS_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
 #define STFTCB_CS_MODER             GPIOB->MODER |= GPIO_MODER_MODER15_0
-#define	STFTCB_CS_ON	            GPIOB->ODR |= GPIO_ODR_OD15
-#define	STFTCB_CS_OFF	            GPIOB->ODR &= ~GPIO_ODR_OD15
+#define	STFTCB_CS_ON                GPIOB->ODR |= GPIO_ODR_OD15
+#define	STFTCB_CS_OFF               GPIOB->ODR &= ~GPIO_ODR_OD15
 
 //// Текст
 /* Возможны случаи когда нет надобности в том, чтобы выводить текст, для этого закомментировать строчку ниже
