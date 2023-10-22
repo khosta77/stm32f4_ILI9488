@@ -59,9 +59,9 @@ void printT(uint16_t x0, uint16_t y0, const char *str);
  * */
 void DMA2_Stream3_IRQHandler(void) {
     if (STFTCB_SPI_DMA_TCIF) {  // Прерывания по завершению передачи
-		GPIOD->ODR ^= GPIO_ODR_OD15;
-		stftcb_array_tx_status = 0x00;
-		STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
+	GPIOD->ODR ^= GPIO_ODR_OD15;
+	stftcb_array_tx_status = 0x00;
+	STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
         STFTCB_SPI_DMA_CTCIF; 
 	}
 }
