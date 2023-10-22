@@ -6,6 +6,7 @@ uint16_t stftcb_array_tx_1[STFTCB_SIZE];
 static void STFTCB_GPIO_init();
 static void STFTCB_memset0();
 static void STFTCB_DMA_init();
+static void STFTCB_TFT_init();
 
 static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color,
                              const int16_t deltaX, const int16_t deltaY, const int16_t signX,
@@ -42,6 +43,7 @@ void STFTCB_init() {
     STFTCB_GPIO_init();
     STFTCB_memset0();
     STFTCB_DMA_init();
+    stftcb_updateFrame();  // Закрасим в черный цвет экран
 }
 
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
@@ -68,6 +70,23 @@ static void STFTCB_DMA_init() {
     STFTCB_SPI_DMA_SxCR->M0AR = (uint32_t)&stftcb_array_tx_0[0];
     STFTCB_SPI_DMA_SxCR->M1AR = (uint32_t)&stftcb_array_tx_1[0];
 	STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+}
+
+static void STFTCB_TFT_init() {
+    STFTCB_CS_OFF;
+	STFTCB_RESET_OFF;
+	STFTCB_DELAY(7);
+	STFTCB_RESET_ON;
+    STFTCB_DELAY(20000);
+
+    stftcb_sendCmd1byte(STFTCB_SO);
+    STFTCB_DELAY(10000);
+
+    stftcb_sendCmd1byte(STFTCB_NDMO);
+    STFTCB_DELAY(100);
+    stftcb_sendCmd1byte(STFTCB_COLMODPFS);
+    stftcb_sendData1byte(0x55);  // 16-bit mode
+    STFTCB_DELAY(100);
 }
 
 void stftcb_sendCmd1byte(uint8_t cmd) {
@@ -99,9 +118,9 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     stftcb_sendCmd1byte(STFTCB_CASET);  // Column addr set
 #if (STFTCB_WIDTH < 0xFF)
     stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte((x0));                    // XSTART  XS7 ~ XS0
+    stftcb_sendData1byte((x0));         // XSTART  XS7 ~ XS0
     stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte((x1));                    // XEND    XE7 ~ XE0
+    stftcb_sendData1byte((x1));         // XEND    XE7 ~ XE0
 
 #else
     stftcb_sendData1byte(((0xFF00 & (x0)) >> 8));
@@ -128,12 +147,12 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
 void stftcb_SetFullAddressWindow() {
     SPI_1byte_mode_on();
-    stftcb_sendCmd1byte(STFTCB_CASET);  // Column addr set
+    stftcb_sendCmd1byte(STFTCB_CASET);              // Column addr set
 	stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte(0x00);         // XSTART XS7 ~ XS0
+    stftcb_sendData1byte(0x00);                     // XSTART XS7 ~ XS0
 #if (STFTCB_WIDTH < 0xFF)
     stftcb_sendData1byte(0x00);
-    stftcb_sendData1byte((STFTCB_WIDTH - 1));                    // XEND   XE7 ~ XE0
+    stftcb_sendData1byte((STFTCB_WIDTH - 1));       // XEND   XE7 ~ XE0
 #else
 	stftcb_sendData1byte(((0xFF00 & (STFTCB_WIDTH - 1)) >> 8));
     stftcb_sendData1byte(((STFTCB_WIDTH - 1) & 0x00FF));         // XEND   XE7 ~ XE0
