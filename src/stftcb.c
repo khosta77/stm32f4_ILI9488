@@ -69,7 +69,7 @@ static void STFTCB_memset0() {
 static void STFTCB_DMA_init() {
     STFTCB_SPI_DMA_SxCR->M0AR = (uint32_t)&stftcb_array_tx_0[0];
     STFTCB_SPI_DMA_SxCR->M1AR = (uint32_t)&stftcb_array_tx_1[0];
-	STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
 }
 
 static void STFTCB_TFT_init() {
@@ -142,7 +142,7 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     stftcb_sendData1byte(((y1) & 0x00FF));
 #endif
 
-	stftcb_sendCmd1byte(STFTCB_RAMWR);
+    stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
 
 void stftcb_SetFullAddressWindow() {
@@ -154,7 +154,7 @@ void stftcb_SetFullAddressWindow() {
     stftcb_sendData1byte(0x00);
     stftcb_sendData1byte((STFTCB_WIDTH - 1));       // XEND   XE7 ~ XE0
 #else
-	stftcb_sendData1byte(((0xFF00 & (STFTCB_WIDTH - 1)) >> 8));
+    stftcb_sendData1byte(((0xFF00 & (STFTCB_WIDTH - 1)) >> 8));
     stftcb_sendData1byte(((STFTCB_WIDTH - 1) & 0x00FF));         // XEND   XE7 ~ XE0
 #endif
 
@@ -192,7 +192,7 @@ void stftcb_updateFrame() {
     }
 
     stftcb_array_tx_status = 0x11;
-	STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_MINC;
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_EN;
 }
