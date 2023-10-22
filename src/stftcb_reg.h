@@ -3,6 +3,7 @@
 
 #include "../system/include/cmsis/stm32f4xx.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h> 
 #include <math.h>
@@ -77,7 +78,7 @@
  *  +---------------+
  *     <STFTCBus>
  * */
-#define STFTCB_POINT(arr, y, x)     (arr[((y * ST7735_WIDTH) + x)])
+#define STFTCB_POINT(arr, y, x)     (arr[((y * STFTCB_WIDTH) + x)])
 #define STFTCB_DELAY(time)          for (uint32_t t = 0; t < time; t++)
 
 //// Макросы для работы с дисплеем
@@ -209,7 +210,7 @@
  * 111: fPCLK/256
  * Настаивать по SPI_CR1_BR_X
  * */
-#define STFTCB_SPI_BR               ()
+#define STFTCB_SPI_BR               (0)
 
 /* инициализация GPIO для SPI1 так как нам надо только отправлять данные в режиме Master, то надо \
  * инициализировать только две ножки, тактирование(SPI_SCK) и Master Out Slave In (SPI_MOSI).

@@ -108,7 +108,7 @@ void stftcb_sendData2byte(uint16_t dt) {
     STFTCB_DC_ON;
     SPI_transmit(dt);
 }
-
+#if 0
 #if (STFTCB_WIDTH < 0xFF)
 void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
 #else
@@ -144,7 +144,7 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
     stftcb_sendCmd1byte(STFTCB_RAMWR);
 }
-
+#endif
 void stftcb_SetFullAddressWindow() {
     SPI_1byte_mode_on();
     stftcb_sendCmd1byte(STFTCB_CASET);              // Column addr set
@@ -158,7 +158,7 @@ void stftcb_SetFullAddressWindow() {
     stftcb_sendData1byte(((STFTCB_WIDTH - 1) & 0x00FF));         // XEND   XE7 ~ XE0
 #endif
 
-    stftcb_sendCmd1byte(STFTCB_PASET);  // Row addr set
+    stftcb_sendCmd1byte(STFTCB_RASET);  // Row addr set
     stftcb_sendData1byte(0x00);
     stftcb_sendData1byte(0x00);         // YSTART
 #if (STFTCB_HEIGHT < 0xFF)

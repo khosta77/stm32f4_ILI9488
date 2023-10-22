@@ -1,6 +1,8 @@
 #ifndef SERIAL_TFT_CONTROL_BUS_FONT_H_
 #define SERIAL_TFT_CONTROL_BUS_FONT_H_
 
+#include "stftcb_reg.h"
+
 uint8_t MyFont[] = {
     0b00000000,  // empty
     0b00000000,

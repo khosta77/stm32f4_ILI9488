@@ -25,11 +25,11 @@ void stftcb_sendData2byte(uint16_t dt);
 
 //// Работа с кадром
 // Задача размеров окна
-#if (STFTCB_WIDTH < 0xFF)
-void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
-#else
-void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
-#endif
+//#if (STFTCB_WIDTH < 0xFF)
+//void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+//#else
+//void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+//#endif
 void stftcb_SetFullAddressWindow();
 
 // Обоновление кадра

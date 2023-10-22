@@ -1,13 +1,13 @@
 #include "stftcb.h"
 
-void rainbow();
-void drawPoints();
-void drawLine_0();
-void drawLine_1();
-void drawRectangleNoFill();
-void drawRectangleFill();
-void drawCicleNoFill();
-void drawCicleFill();
+static void rainbow();
+static void drawPoints();
+static void drawLine_0();
+static void drawLine_1();
+static void drawRectangleNoFill();
+static void drawRectangleFill();
+static void drawCicleNoFill();
+static void drawCicleFill();
 
 uint16_t colors[] = {
 //    STFTCB_COLOR_BLACK,
@@ -40,7 +40,7 @@ int main(void) {
     }
 }
 
-void rainbow() {
+static void rainbow() {
     static uint16_t color = 0x00;
     if (color == COLORS_SIZE)
             color = 0x00;
@@ -48,7 +48,7 @@ void rainbow() {
     ++color;
 }
 
-void drawPoints() {
+static void drawPoints() {
     static uint16_t color = 0x00;
     if (color == COLORS_SIZE)
             color = 0x00;
@@ -61,7 +61,7 @@ void drawPoints() {
     ++color;
 }
 
-void drawLine_0() {
+static void drawLine_0() {
     static uint16_t color = 0x00;
     
     CHECK_C(color);
@@ -89,7 +89,7 @@ void drawLine_0() {
     }
 }
 
-void drwwLine_1() {
+static void drawLine_1() {
     static uint16_t color = 0x00;
 
     CHECK_C(color);
@@ -114,7 +114,7 @@ void drwwLine_1() {
     stftcb_updateFrame();
 }
 
-void drawRectangleNoFill() {
+static void drawRectangleNoFill() {
     for (float a = 0.0; a < 360.0; a += 5) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -134,7 +134,7 @@ void drawRectangleNoFill() {
     }
 }
 
-void drawRectangleFill() {
+static void drawRectangleFill() {
     for (float a = 0.0; a < 360.0; a += 5) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -151,7 +151,7 @@ void drawRectangleFill() {
     }
 }
 
-void drawCicleNoFill() {
+static void drawCicleNoFill() {
     for (int a = 6; a < 16; a++) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -168,7 +168,7 @@ void drawCicleNoFill() {
     }  
 }
 
-void drawCicleFill() {
+static void drawCicleFill() {
     for (int a = 6; a < 16; a++) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
