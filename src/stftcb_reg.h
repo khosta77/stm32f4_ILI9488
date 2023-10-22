@@ -78,6 +78,7 @@
  *     <STFTCBus>
  * */
 #define STFTCB_POINT(arr, y, x)     (arr[((y * ST7735_WIDTH) + x)])
+#define STFTCB_DELAY(time)          for (uint32_t t = 0; t < time; t++)
 
 //// Макросы для работы с дисплеем
 // Level 1
