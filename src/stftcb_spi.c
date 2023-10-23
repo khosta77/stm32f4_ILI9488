@@ -19,7 +19,7 @@ static void SPI_SPI_init() {
     // 3. Сброс битов, которые могут испортить передачу
     STFTCB_SPI->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
     // 3. настрока DMA
-    STFTCB_SPI->CR2 |= (SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+    STFTCB_SPI->CR2 |= (SPI_CR2_TXDMAEN);
     // 4. Настройка CR1
     // - SPI_CR1_MSTR - мастер мод
     // - SPI_CR1_SSM - Разрешает программное управление slave устройством
