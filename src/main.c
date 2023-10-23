@@ -1,5 +1,17 @@
 #include "stftcb.h"
 
+
+/** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
+ * */
+void DMA2_Stream3_IRQHandler(void) {
+    if (STFTCB_SPI_DMA_TCIF) {  // Прерывания по завершению передачи
+        GPIOD->ODR ^= GPIO_ODR_OD15;
+        stftcb_array_tx_status = 0x00;
+        STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
+        STFTCB_SPI_DMA_CTCIF; 
+    }
+}
+
 static void rainbow();
 static void drawPoints();
 static void drawLine_0();
@@ -32,11 +44,12 @@ int main(void) {
 
     STFTCB_init();
 
-    char *c = "890";
+    //char *c = "890";
 
     while(1) {
-        printT(0,0, &c[0]);
-        stftcb_updateFrame();
+		drawRectangleFill();
+        //printT(0,0, &c[0]);
+        //stftcb_updateFrame();
     }
 }
 
