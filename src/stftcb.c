@@ -1,7 +1,11 @@
 #include "stftcb.h"
+#include "st7735_register.h"
 
 uint16_t stftcb_array_tx_0[STFTCB_SIZE];
 uint16_t stftcb_array_tx_1[STFTCB_SIZE];
+
+uint8_t stftcb_array_tx_status;
+uint8_t stftcb_array_tx_mxar;
 
 static void STFTCB_GPIO_init();
 static void STFTCB_memset0();
@@ -36,13 +40,173 @@ static void reverse(char* str);
 #endif
 
 
+#if 1
+static void ST7735_Init_Command1();
+static void ST7735_Init_Command2();
+static void ST7735_Init_Command3();
+
+static void ST7735_Init() {
+    STFTCB_CS_OFF;
+    STFTCB_RESET_OFF;
+    STFTCB_DELAY(7);
+    STFTCB_RESET_ON;
+
+    ST7735_Init_Command1();
+//    ST7735_Init_Command2();
+    ST7735_Init_Command3();
+
+    //STFTCB_CS_ON;
+    stftcb_updateFrame();
+}
+
+//%s/stftcb_sendCmd1byte(/stftcb_sendCmd1byte(/g
+//%s/stftcb_sendData1byte(/stftcb_sendData1byte(/g
+
+static void ST7735_Init_Command1() {
+#if 1
+    stftcb_sendCmd1byte(ST7735_SWRESET);    //  1: Software reset
+    STFTCB_DELAY(150);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_SLPOUT);     //  2: Out of sleep mode
+    STFTCB_DELAY(500);
+#endif
+#if 0
+#if 1
+    stftcb_sendCmd1byte(ST7735_FRMCTR1);    //  3: Frame rate ctrl - normal mode
+    stftcb_sendData1byte(0x01);             //     Rate = fosc/(1x2+40) * (LINE+2C+2D)
+    stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x2D);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_FRMCTR2);    //  4: Frame rate control - idle mode
+    stftcb_sendData1byte(0x01);             //  Rate = fosc/(1x2+40) * (LINE+2C+2D)
+    stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x2D);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_FRMCTR3);    //  5: Frame rate ctrl - partial mode
+    stftcb_sendData1byte(0x01);             //     Dot inversion mode
+    stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x2D);
+    stftcb_sendData1byte(0x01);             //     Line inversion mode
+    stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x2D);
+#endif
+#endif
+#if 0
+    stftcb_sendCmd1byte(ST7735_INVCTR);     //  6: Display inversion ctrl
+    stftcb_sendData1byte(0x07);             //     No inversion
+#endif
+#if 0
+#if 1
+    stftcb_sendCmd1byte(ST7735_PWCTR1);     //  7: Power control
+    stftcb_sendData1byte(0xA2);
+    stftcb_sendData1byte(0x02);             //     -4.6V
+    stftcb_sendData1byte(0x84);             //     AUTO mode
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_PWCTR2);     //  8: Power control
+    stftcb_sendData1byte(0xC5);             //     VGH25 = 2.4C VGSEL = -10 VGH = 3 * AVDD
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_PWCTR3);     //  9: Power control
+    stftcb_sendData1byte(0x0A);             //     Opamp current small
+    stftcb_sendData1byte(0x00);             //     Boost frequency
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_PWCTR4);     // 10: Power control
+    stftcb_sendData1byte(0x8A);             //     BCLK/2, Opamp current small & Medium low
+    stftcb_sendData1byte(0x2A);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_PWCTR5);     // 11: Power control
+    stftcb_sendData1byte(0x8A);
+    stftcb_sendData1byte(0xEE);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_VMCTR1);     // 12: Power control
+    stftcb_sendData1byte(0x0E);
+#endif
+#endif
+//    stftcb_sendCmd1byte(ST7735_INVOFF);     // 13: Don't invert display
+//    stftcb_sendCmd1byte(ST7735_MADCTL);     // 14: Memory access control (directions)
+//    stftcb_sendData1byte(ST7735_ROTATION);  //     row addr/col addr, bottom to top refresh
+    stftcb_sendCmd1byte(ST7735_COLMOD);     // 15: set color mode
+    stftcb_sendData1byte(0x05);             //     16-bit color
+}
+
+static void ST7735_Init_Command2(void) {
+    stftcb_sendCmd1byte(ST7735_CASET);  //  1: Column addr set
+    stftcb_sendData1byte(0x00);         //     XSTART = 0
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);         //     XEND = 127
+    stftcb_sendData1byte(0x7F);
+    stftcb_sendCmd1byte(ST7735_RASET);  //  2: Row addr set
+    stftcb_sendData1byte(0x00);         //     XSTART = 0
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);         //     XEND = 127
+    stftcb_sendData1byte(0x7F);
+}
+
+static void ST7735_Init_Command3(void) {
+#if 0
+#if 1
+    stftcb_sendCmd1byte(ST7735_GMCTRP1);  //  1: Magical unicorn dust
+    stftcb_sendData1byte(0x02);
+    stftcb_sendData1byte(0x1C);
+    stftcb_sendData1byte(0x07);
+    stftcb_sendData1byte(0x12);
+    stftcb_sendData1byte(0x37);
+    stftcb_sendData1byte(0x32);
+    stftcb_sendData1byte(0x29);
+    stftcb_sendData1byte(0x2D);
+    stftcb_sendData1byte(0x29);
+    stftcb_sendData1byte(0x25);
+    stftcb_sendData1byte(0x2B);
+    stftcb_sendData1byte(0x39);
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x01);
+    stftcb_sendData1byte(0x03);
+    stftcb_sendData1byte(0x10);
+#endif
+#if 1
+    stftcb_sendCmd1byte(ST7735_GMCTRN1);  //  2: Sparkles and rainbows
+    stftcb_sendData1byte(0x03);
+    stftcb_sendData1byte(0x1D);
+    stftcb_sendData1byte(0x07);
+    stftcb_sendData1byte(0x06);
+    stftcb_sendData1byte(0x2E);
+    stftcb_sendData1byte(0x2C);
+    stftcb_sendData1byte(0x29);
+    stftcb_sendData1byte(0x2D);
+    stftcb_sendData1byte(0x2E);
+    stftcb_sendData1byte(0x2E);
+    stftcb_sendData1byte(0x37);
+    stftcb_sendData1byte(0x3F);
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x00);
+    stftcb_sendData1byte(0x02);
+    stftcb_sendData1byte(0x10);
+#endif
+#endif
+//    stftcb_sendCmd1byte(ST7735_NORON);
+//    STFTCB_DELAY(10);
+    stftcb_sendCmd1byte(ST7735_DISPON);
+    STFTCB_DELAY(100);
+}
+#endif
+
 /** @brief STFTCB_init - инициализация интерфейса serial tft control bus
  * */
 void STFTCB_init() {
+    stftcb_array_tx_status = 0x00;
+    stftcb_array_tx_mxar = 0x00;
     SPI_init();
     STFTCB_GPIO_init();
     STFTCB_memset0();
     STFTCB_DMA_init();
+    ST7735_Init();
     stftcb_updateFrame();  // Закрасим в черный цвет экран
 }
 
@@ -108,7 +272,7 @@ void stftcb_sendData2byte(uint16_t dt) {
     STFTCB_DC_ON;
     SPI_transmit(dt);
 }
-#if 0
+#if 1
 #if (STFTCB_WIDTH < 0xFF)
 void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
 #else
@@ -146,6 +310,8 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 }
 #endif
 void stftcb_SetFullAddressWindow() {
+    stftcb_SetAddressWindow(0, 0, 128, 160);
+    return;
     SPI_1byte_mode_on();
     stftcb_sendCmd1byte(STFTCB_CASET);              // Column addr set
     stftcb_sendData1byte(0x00);
@@ -609,7 +775,7 @@ void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
     }
 }
 
-#ifndef STFTCB_TEXT
+#ifdef STFTCB_TEXT
 /*=========================================================================================================*/
 /*                                              Шрифты                                                     */
 /*=========================================================================================================*/
