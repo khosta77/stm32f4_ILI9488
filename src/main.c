@@ -22,7 +22,7 @@ static void drawCicleNoFill();
 static void drawCicleFill();
 
 uint16_t colors[] = {
-//    STFTCB_COLOR_BLACK,
+    STFTCB_COLOR_BLACK,
     STFTCB_COLOR_WHITE,
     STFTCB_COLOR_BLUE,
     STFTCB_COLOR_RED,
@@ -31,7 +31,7 @@ uint16_t colors[] = {
     STFTCB_COLOR_YELLOW
 };
 
-const uint8_t COLORS_SIZE = (sizeof(colors) / sizeof(colors[0]));
+const uint8_t COLORS_SIZE = 7;//(sizeof(colors) / sizeof(colors[0]));
 
 #define RGB565(r, g, b) (((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3))
 #define CHECK_C(c) { if (c == COLORS_SIZE) c = 0x00; \
@@ -47,7 +47,7 @@ int main(void) {
     //char *c = "890";
 
     while(1) {
-		drawRectangleFill();
+		drawLine_0();
         //printT(0,0, &c[0]);
         //stftcb_updateFrame();
     }
@@ -58,6 +58,8 @@ static void rainbow() {
     if (color == COLORS_SIZE)
             color = 0x00;
     stftcb_DrawFillBackground(colors[color]);
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
+    stftcb_updateFrame();
     ++color;
 }
 
@@ -76,24 +78,27 @@ static void drawPoints() {
 
 static void drawLine_0() {
     static uint16_t color = 0x00;
-    
+    for (uint32_t t = 0; t < 0xAFFFF; t++);  
     CHECK_C(color);
     for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
         stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), i, colors[color]);
         stftcb_updateFrame();
     }
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
         stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, i, colors[color]);
         stftcb_updateFrame();
     }
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
         stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, i, colors[color]);
         stftcb_updateFrame();
     }
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
@@ -104,26 +109,34 @@ static void drawLine_0() {
 
 static void drawLine_1() {
     static uint16_t color = 0x00;
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0; i < STFTCB_HEIGHT; i++)
         stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), i, colors[color]);
     stftcb_updateFrame();
+    stftcb_updateFrame();
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     
     CHECK_C(color);
     for (uint16_t i = 0; i < STFTCB_HEIGHT; i++)
         stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, i, colors[color]);
     stftcb_updateFrame();
+    stftcb_updateFrame();
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0; i < STFTCB_HEIGHT; i++)
         stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, i, colors[color]);
     stftcb_updateFrame();
+    stftcb_updateFrame();
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
     for (uint16_t i = 0; i < STFTCB_HEIGHT; i++)
         stftcb_DrawLine(0, (STFTCB_HEIGHT - 1), (STFTCB_WIDTH - 1), i, colors[color]);
+    stftcb_updateFrame();
     stftcb_updateFrame();
 }
 
