@@ -310,8 +310,8 @@ void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 }
 #endif
 void stftcb_SetFullAddressWindow() {
-    stftcb_SetAddressWindow(0, 0, 128, 160);
-    return;
+    //stftcb_SetAddressWindow(0, 0, 128, 160);
+    //return;
     SPI_1byte_mode_on();
     stftcb_sendCmd1byte(STFTCB_CASET);              // Column addr set
     stftcb_sendData1byte(0x00);
