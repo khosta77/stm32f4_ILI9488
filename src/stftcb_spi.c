@@ -13,9 +13,8 @@ void SPI_init() {
 static void SPI_SPI_init() {
     // 1. Включаем тактирование
     STFTCB_SPI_RCC;
-    //RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
     // 2. Настройка деления частоты
-    STFTCB_SPI->CR1 |= STFTCB_SPI_BR;  // ();  // (SPI_CR1_BR_1 | SPI_CR1_BR_0);
+    STFTCB_SPI->CR1 |= STFTCB_SPI_BR;
     // 3. Сброс битов, которые могут испортить передачу
     STFTCB_SPI->CR1 &= ~(SPI_CR1_LSBFIRST | SPI_CR1_CPHA | SPI_CR1_CPOL);
     // 3. настрока DMA
@@ -24,8 +23,8 @@ static void SPI_SPI_init() {
     // - SPI_CR1_MSTR - мастер мод
     // - SPI_CR1_SSM - Разрешает программное управление slave устройством
     // - SPI_CR1_SSI - Надо с SPI_CR1_SSM включать. Синхронизирует что то
-    // - SPI_CR1_SPE - Запуск SPI
     // - SPI_CR1_DFF - 16-битный режим передачи, его включать после инициализации дисплея
+    // - SPI_CR1_SPE - Запуск SPI
 	STFTCB_SPI->CR1 |= (SPI_CR1_MSTR | /*SPI_CR1_DFF |*/ SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_SPE);
 }
 
@@ -34,20 +33,25 @@ static void SPI_SPI_init() {
 static void SPI_GPIO_init() {
     STFTCB_SPI_GPIO_SCK_RCC;
     STFTCB_SPI_GPIO_SCK_MODER;
+    STFTCB_SPI_GPIO_SCK_PUPDR;
+    STFTCB_SPI_GPIO_SCK_OSPDR;
     STFTCB_SPI_GPIO_SCK_AFR;
 
 //    STFTCB_SPI_GPIO_MISO_RCC;
 //    STFTCB_SPI_GPIO_MISO_MODER;
+//    STFTCB_SPI_GPIO_MISO_PUPDR;
+//    STFTCB_SPI_GPIO_MISO_OSPDR;
 //    STFTCB_SPI_GPIO_MISO_AFR;
 
     STFTCB_SPI_GPIO_MOSI_RCC;
     STFTCB_SPI_GPIO_MOSI_MODER;
+    STFTCB_SPI_GPIO_MOSI_PUPDR;
+    STFTCB_SPI_GPIO_MOSI_OSPDR;
     STFTCB_SPI_GPIO_MOSI_AFR;
 }
 
 static void SPI_DMA_init() {
     STFTCB_SPI_DMA_RCC;
-    //RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
 
     // Отключаем DMA, для передачи
     STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
@@ -62,16 +66,10 @@ static void SPI_DMA_init() {
     // - DMA_SxCR_TCIE    - Прерывания по завершению передачи
     // // Дополнительные прерывания, не и использую
     // - DMA_SxCR_CIRC    - Режим кольцевого буфера разрешен
-    // - DMA_SxCR_HTIE    -
-    // - DMA_SxCR_TEIE    -
-    // - DMA_SxCR_DMEIE   -
     STFTCB_SPI_DMA_SxCR->CR = (STFTCB_SPI_DMA_SxCR_CH | DMA_SxCR_MINC | DMA_SxCR_DIR_0 |
                                DMA_SxCR_MSIZE_0 | DMA_SxCR_PSIZE_0 | DMA_SxCR_TCIE);
-    //DMA2_Stream3->FCR = 0;
-    //DMA2_Stream3->FCR &= ~DMA_SxFCR_DMDIS;
 
     STFTCB_SPI_DMA_CTCIF;  // Включаем прерывание после успешной передачи передачи
-    //DMA2->LIFCR |= DMA_LIFCR_CTCIF3;  
     STFTCB_SPI_DMA_SxCR->PAR = (uint32_t)&STFTCB_SPI->DR;
     NVIC_EnableIRQ(STFTCB_SPI_DMA_IRQN);
     NVIC_SetPriority(STFTCB_SPI_DMA_IRQN, 2);
