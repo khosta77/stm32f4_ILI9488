@@ -43,9 +43,9 @@ static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 
 #define STP_FLASH_WHILE_BSY()       { while (FLASH->SR & FLASH_SR_BSY){} }
 #define START_ADDRESS   0x0800C000 	//	(FLASH_BASE + 48*1024)
-#define BASE_ADDRESS    0x08000000
-#define ADDRESS_MX0R    (BASE_ADDRESS + STFTCB_SIZE)
-#define ADDRESS_MX1R    (BASE_ADDRESS + (2 * STFTCB_SIZE))
+#define BASE_ADDRESS    0x08010000
+#define ADDRESS_MX0R    ((uint32_t)0x08010000)// + (uint32_t)STFTCB_SIZE)
+#define ADDRESS_MX1R    ((uint32_t)0x08020000)// + (uint32_t)STFTCB_SIZE)// + (uint32_t)(2 * STFTCB_SIZE))
 
 void stp_flash_init() {
 	//// Конфигурация FLASH
@@ -63,10 +63,10 @@ void stp_flash_init() {
 	
     // 5. PLL Выбран в качестве системных часов \
     // если не работает, убрать макрос.
-    RCC->CFGR |= RCC_CFGR_SW_1;  //(2 <<  0);
+    //RCC->CFGR |= RCC_CFGR_SW_1;  //(2 <<  0);
 	
     // 6. Ждем пока PLL включится
-	while ((RCC->CFGR & 0x0F) != 0x0A);
+	//while ((RCC->CFGR & 0x0F) != 0x0A);
 }
 
 void stp_flash_unlock() {
@@ -135,8 +135,32 @@ void stp_flash_write_32(uint32_t address, const uint32_t *dataBuffer, uint32_t s
 }
 
 
+static void stftcb_flash_draw_color(uint32_t address, const uint16_t color, uint32_t i) {
+    // 3. Цикл записи
+//    uint8_t clr[2] = {0xFF, 0xFF}; //{(uint8_t)((color >> 8) & 0xFF), (uint8_t)(color & 0xFF)};
+//    address += (1 + (i * sizeof(uint8_t)));
+//    stp_flash_write(address, clr[0]);
+//    address += 1;
+//    stp_flash_write(address, clr[1]);
+
+}
 
 
+void stp_flash_read_8(uint32_t address, uint8_t *buffer, uint32_t size) {
+    memcpy(buffer, (uint8_t*) address, size);
+}
+
+void stp_flash_read_16(uint32_t address, uint16_t *buffer, uint32_t size) {
+	uint8_t char_buffer[(sizeof(uint16_t) * size)];
+	memcpy(char_buffer, (uint8_t*) address, (sizeof(uint16_t) * size));
+	memcpy(buffer, char_buffer, (size * sizeof(uint16_t)));
+}
+
+void stp_flash_read_32(uint32_t address, uint32_t *buffer, uint32_t size) {
+	uint8_t char_buffer[(sizeof(uint32_t) * size)];
+	memcpy(char_buffer, (uint8_t*) address, (sizeof(uint32_t) * size));
+	memcpy(buffer, char_buffer, (size * sizeof(uint32_t)));
+}
 
 
 /*=========================================================================================================*/
@@ -149,6 +173,12 @@ void STFTCB_init() {
     stftcb_array_tx_mxar = 0x00;
     SPI_init();
     STFTCB_GPIO_init();
+    GPIOD->ODR |= GPIO_ODR_OD12;
+
+    stp_flash_init();
+    stp_flash_unlock();
+    STP_FLASH_WHILE_BSY();
+        GPIOD->ODR |= GPIO_ODR_OD13;
 
     //STFTCB_memset0();
     STFTCB_DMA_init();
@@ -430,10 +460,18 @@ static void stftcb_Draw_FillBackground1(uint16_t color) {
 /* @brief stftcb_DrawFillBackground - закрашивает в выбранный цвет задний фон
  * */
 void stftcb_DrawFillBackground(uint16_t color) {
-    if (stftcb_array_tx_mxar == 0)
+    while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
+    if (stftcb_array_tx_mxar == 0) {
         stftcb_Draw_FillBackground0(color);
-    else
+        stp_flash_write_16(ADDRESS_MX0R, &stftcb_array_tx_0[0], STFTCB_SIZE);
+        stftcb_Draw_FillBackground0(0x0000);
+        stp_flash_read_16(ADDRESS_MX0R, &stftcb_array_tx_0[0], STFTCB_SIZE);
+    } else {
         stftcb_Draw_FillBackground1(color);
+        stp_flash_write_16(ADDRESS_MX1R, &stftcb_array_tx_1[0], STFTCB_SIZE);
+        stftcb_Draw_FillBackground1(0x0000);
+        stp_flash_read_16(ADDRESS_MX1R, &stftcb_array_tx_1[0], STFTCB_SIZE);
+    }
 }
 
 #define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa - (y - y0) * sina + x0)

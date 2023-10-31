@@ -45,11 +45,11 @@ int main(void) {
     GPIOD->ODR &= ~(GPIO_ODR_OD12 | GPIO_ODR_OD13 | GPIO_ODR_OD14 | GPIO_ODR_OD15);
 
     STFTCB_init();
-
     //char *c = "890";
 
     while(1) {
         rainbow();
+        GPIOD->ODR ^= GPIO_ODR_OD12;
         //printT(0,0, &c[0]);
         //stftcb_updateFrame();
     }
