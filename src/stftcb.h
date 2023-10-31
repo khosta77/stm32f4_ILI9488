@@ -11,6 +11,7 @@ extern uint16_t stftcb_array_tx_1[STFTCB_SIZE];
 extern uint8_t stftcb_array_tx_status;
 extern uint8_t stftcb_array_tx_mxar;
 
+
 //// Функция инициализации
 void STFTCB_init();
 
@@ -23,13 +24,12 @@ void stftcb_sendData1byte(uint8_t dt);
 void stftcb_sendCmd2byte(uint16_t cmd);
 void stftcb_sendData2byte(uint16_t dt);
 
+// Массив с настройкой
+void stftcb_sendCmd(uint8_t address, uint8_t *data, uint16_t size);
+
 //// Работа с кадром
 // Задача размеров окна
-#if (STFTCB_WIDTH < 0xFF)
-void stftcb_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
-#else
 void stftcb_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-#endif
 void stftcb_SetFullAddressWindow();
 
 // Обоновление кадра
