@@ -1,6 +1,5 @@
 #include "stftcb.h"
 
-
 /** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
  * */
 void DMA2_Stream3_IRQHandler(void) {
@@ -12,14 +11,17 @@ void DMA2_Stream3_IRQHandler(void) {
     }
 }
 
-static void rainbow();
-static void drawPoints();
-static void drawLine_0();
-static void drawLine_1();
-static void drawRectangleNoFill();
-static void drawRectangleFill();
-static void drawCicleNoFill();
-static void drawCicleFill();
+
+
+
+void rainbow();
+void drawPoints();
+void drawLine_0();
+void drawLine_1();
+void drawRectangleNoFill();
+void drawRectangleFill();
+void drawCicleNoFill();
+void drawCicleFill();
 
 uint16_t colors[] = {
     STFTCB_COLOR_BLACK,
@@ -47,13 +49,13 @@ int main(void) {
     //char *c = "890";
 
     while(1) {
-		drawLine_0();
+        drawLine_0();
         //printT(0,0, &c[0]);
         //stftcb_updateFrame();
     }
 }
 
-static void rainbow() {
+void rainbow() {
     static uint16_t color = 0x00;
     if (color == COLORS_SIZE)
             color = 0x00;
@@ -63,7 +65,7 @@ static void rainbow() {
     ++color;
 }
 
-static void drawPoints() {
+void drawPoints() {
     static uint16_t color = 0x00;
     if (color == COLORS_SIZE)
             color = 0x00;
@@ -76,38 +78,61 @@ static void drawPoints() {
     ++color;
 }
 
-static void drawLine_0() {
+void drawLine_0() {
     static uint16_t color = 0x00;
     for (uint32_t t = 0; t < 0xAFFFF; t++);  
     CHECK_C(color);
-    for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
+    stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), 0, colors[color]);
+    stftcb_updateFrame();
+    stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), 0, colors[color]);
+    stftcb_updateFrame();
+
+    for (uint16_t i = 0; i < STFTCB_HEIGHT; i++) {
         stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), i, colors[color]);
+        stftcb_DrawLine(0, 0, (STFTCB_WIDTH - 1), (i + 1), colors[color]);
         stftcb_updateFrame();
     }
     for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
-    for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
+    stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, 0, colors[color]);
+    stftcb_updateFrame();
+    stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, 0, colors[color]);
+    stftcb_updateFrame();
+    for (uint16_t i = 0; i < STFTCB_HEIGHT; i++) {
         stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, i, colors[color]);
+        stftcb_DrawLine((STFTCB_WIDTH - 1), 0, 0, (i + 1), colors[color]);
         stftcb_updateFrame();
     }
     for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
-    for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
+    stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, 0, colors[color]);
+    stftcb_updateFrame();
+    stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, 0, colors[color]);
+    stftcb_updateFrame();
+
+    for (uint16_t i = 0; i < STFTCB_HEIGHT; i++) {
         stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, i, colors[color]);
+        stftcb_DrawLine((STFTCB_WIDTH - 1), (STFTCB_HEIGHT - 1), 0, (i + 1), colors[color]);
         stftcb_updateFrame();
     }
+
     for (uint32_t t = 0; t < 0xAFFFF; t++);
 
     CHECK_C(color);
-    for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
+    stftcb_DrawLine(0, (STFTCB_HEIGHT - 1), (STFTCB_WIDTH - 1), 0, colors[color]);
+    stftcb_updateFrame();
+    stftcb_DrawLine(0, (STFTCB_HEIGHT - 1), (STFTCB_WIDTH - 1), 0, colors[color]);
+    stftcb_updateFrame();
+    for (uint16_t i = 0; i < STFTCB_HEIGHT; i++) {
         stftcb_DrawLine(0, (STFTCB_HEIGHT - 1), (STFTCB_WIDTH - 1), i, colors[color]);
+        stftcb_DrawLine(0, (STFTCB_HEIGHT - 1), (STFTCB_WIDTH - 1), (i + 1), colors[color]);
         stftcb_updateFrame();
     }
 }
 
-static void drawLine_1() {
+void drawLine_1() {
     static uint16_t color = 0x00;
     for (uint32_t t = 0; t < 0xAFFFF; t++);
 
@@ -140,7 +165,7 @@ static void drawLine_1() {
     stftcb_updateFrame();
 }
 
-static void drawRectangleNoFill() {
+void drawRectangleNoFill() {
     for (float a = 0.0; a < 360.0; a += 5) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -160,7 +185,7 @@ static void drawRectangleNoFill() {
     }
 }
 
-static void drawRectangleFill() {
+void drawRectangleFill() {
     for (float a = 0.0; a < 360.0; a += 5) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -177,7 +202,7 @@ static void drawRectangleFill() {
     }
 }
 
-static void drawCicleNoFill() {
+void drawCicleNoFill() {
     for (int a = 6; a < 16; a++) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
@@ -194,7 +219,7 @@ static void drawCicleNoFill() {
     }  
 }
 
-static void drawCicleFill() {
+void drawCicleFill() {
     for (int a = 6; a < 16; a++) {
         GPIOD->ODR &= ~GPIO_ODR_OD12;
             GPIOD->ODR &= ~GPIO_ODR_OD13;
