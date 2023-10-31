@@ -41,6 +41,104 @@ static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
   #endif
 #endif
 
+#define STP_FLASH_WHILE_BSY()       { while (FLASH->SR & FLASH_SR_BSY){} }
+#define START_ADDRESS   0x0800C000 	//	(FLASH_BASE + 48*1024)
+#define BASE_ADDRESS    0x08000000
+#define ADDRESS_MX0R    (BASE_ADDRESS + STFTCB_SIZE)
+#define ADDRESS_MX1R    (BASE_ADDRESS + (2 * STFTCB_SIZE))
+
+void stp_flash_init() {
+	//// Конфигурация FLASH
+	// 1. Очистка флагов
+    FLASH->ACR = 0;
+	
+    // 2. Установка задержки (5 секунд)
+	FLASH->ACR |= FLASH_ACR_LATENCY_5WS;  // (5 <<  0);
+	
+    // 3. Включаем кэш команд
+    FLASH->ACR |= FLASH_ACR_ICEN;  //(1 <<  9);
+	
+    // 4. Включаем кэш данных
+    FLASH->ACR |= FLASH_ACR_DCEN;  //(1 << 10);
+	
+    // 5. PLL Выбран в качестве системных часов \
+    // если не работает, убрать макрос.
+    RCC->CFGR |= RCC_CFGR_SW_1;  //(2 <<  0);
+	
+    // 6. Ждем пока PLL включится
+	while ((RCC->CFGR & 0x0F) != 0x0A);
+}
+
+void stp_flash_unlock() {
+    //// Разблокировка памяти
+    if (FLASH->CR & FLASH_CR_LOCK) {
+        FLASH->KEYR = 0x45670123;
+        FLASH->KEYR = 0xCDEF89AB;
+    }
+}
+
+void stp_flash_lock() {
+    //// Блокировка памяти
+    FLASH->CR |= FLASH_CR_LOCK;
+}
+
+static void stp_flash_write(uint32_t address, uint8_t data) {
+    //// Запись данных в одну клетку
+    // 1. Разрешаем программирование
+    FLASH->CR |= FLASH_CR_PG;
+
+    // 2. Записываем в ячейку данных один байт
+    *(uint8_t *)address = data;
+
+    // 3. Ждем пока запись завершится
+    STP_FLASH_WHILE_BSY();
+    
+    // 4. Запрещаем программирование
+    FLASH->CR &= ~FLASH_CR_PG;
+}
+
+static void stp_flash_write_buffer(uint32_t address, const uint8_t * dataBuffer, uint32_t size) {
+    //// Запись данных в одну ячейку
+	// 1. Разблокируем память для записи данных
+    stp_flash_unlock();
+    
+    // 2. Подождем пока произойдет разблокировка
+    STP_FLASH_WHILE_BSY();
+
+    // 3. Цикл записи
+    while (size >= sizeof(uint8_t)) {
+    	stp_flash_write(address, *(const uint8_t *)dataBuffer);
+        address += sizeof(uint8_t);
+        dataBuffer += sizeof(uint8_t);
+        size -= sizeof(uint8_t);
+    }
+
+    // 4. Заблокируем память. Признак хорошего тона
+    stp_flash_lock();
+}
+
+// Запись данных во flash
+void stp_flash_write_8(uint32_t address, const uint8_t *dataBuffer, uint32_t size) {
+	stp_flash_write_buffer(address, dataBuffer, size);
+}
+
+void stp_flash_write_16(uint32_t address, const uint16_t *dataBuffer, uint32_t size) {
+    uint8_t buffer[(sizeof(uint16_t) * size)];
+    memcpy(buffer, dataBuffer, (sizeof(uint16_t) * size));
+    stp_flash_write_buffer(address, buffer, (sizeof(uint16_t) * size));
+}
+
+void stp_flash_write_32(uint32_t address, const uint32_t *dataBuffer, uint32_t size) {
+	uint8_t buffer[(sizeof(uint32_t) * size)];
+	memcpy(buffer, dataBuffer, (sizeof(uint32_t) * size));
+	stp_flash_write_buffer(address, buffer, (sizeof(uint32_t) * size));
+}
+
+
+
+
+
+
 /*=========================================================================================================*/
 /*                    Функции инициализации serial tft control bus                                         */
 /*=========================================================================================================*/
@@ -51,9 +149,11 @@ void STFTCB_init() {
     stftcb_array_tx_mxar = 0x00;
     SPI_init();
     STFTCB_GPIO_init();
-    STFTCB_memset0();
+
+    //STFTCB_memset0();
     STFTCB_DMA_init();
     STFTCB_TFT_init();
+
 }
 
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
@@ -97,7 +197,6 @@ static void STFTCB_TFT_init() {
     STFTCB_DELAY(100);
     stftcb_sendCmd1byte(STFTCB_COLMODPFS);  //  2: set color mode
     stftcb_sendData1byte(0x55);             //     16-bit color
-
 #endif
     stftcb_updateFrame();
 }
@@ -129,14 +228,6 @@ void stftcb_sendCmd(uint8_t address, uint8_t *data, uint16_t size) {
     stftcb_sendCmd1byte(address);
     for (uint16_t i = 0; i < size; ++i)
         stftcb_sendData1byte(data[i]);
-}
-
-uint8_t get_stftcb_status() {
-    return stftcb_array_tx_status;
-}
-
-uint8_t get_stftcb_mxar() {
-    return stftcb_array_tx_mxar;
 }
 /*=========================================================================================================*/
 /*                      Функции объявления области выделения кадра                                         */
@@ -326,13 +417,23 @@ static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
     }
 }
 
+static void stftcb_Draw_FillBackground0(uint16_t color) {
+    for (uint32_t i = 0; i < STFTCB_SIZE; i++)
+        stftcb_array_tx_0[i] = color;
+}
+
+static void stftcb_Draw_FillBackground1(uint16_t color) {
+    for (uint32_t i = 0; i < STFTCB_SIZE; i++)
+        stftcb_array_tx_1[i] = color;
+}
+
 /* @brief stftcb_DrawFillBackground - закрашивает в выбранный цвет задний фон
  * */
 void stftcb_DrawFillBackground(uint16_t color) {
     if (stftcb_array_tx_mxar == 0)
-        memset(&stftcb_array_tx_0[0], color, (STFTCB_SIZE * sizeof(uint16_t)));
+        stftcb_Draw_FillBackground0(color);
     else
-        memset(&stftcb_array_tx_1[0], color, (STFTCB_SIZE * sizeof(uint16_t)));
+        stftcb_Draw_FillBackground1(color);
 }
 
 #define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa - (y - y0) * sina + x0)
