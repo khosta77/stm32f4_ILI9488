@@ -49,7 +49,7 @@ int main(void) {
     //char *c = "890";
 
     while(1) {
-        drawLine_0();
+        rainbow();
         //printT(0,0, &c[0]);
         //stftcb_updateFrame();
     }
