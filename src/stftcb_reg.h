@@ -272,10 +272,10 @@
 /* Аппаратный сброс (сброс на низком уровне)
  *  B12 ---> RESET | RST | RES 
  * */
-#define STFTCB_RESET_RCC            RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_RESET_MODER          GPIOB->MODER |= GPIO_MODER_MODER12_0
-#define STFTCB_RESET_ON             GPIOB->ODR |= GPIO_ODR_OD12
-#define STFTCB_RESET_OFF            GPIOB->ODR &= ~GPIO_ODR_OD12
+#define STFTCB_RESET_RCC            RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN
+#define STFTCB_RESET_MODER          GPIOC->MODER |= GPIO_MODER_MODER4_0
+#define STFTCB_RESET_ON             GPIOC->ODR |= GPIO_ODR_OD4
+#define STFTCB_RESET_OFF            GPIOC->ODR &= ~GPIO_ODR_OD4
 
 // D/C | AO | RS
 /* Выбор данных/команды. (некоторые ЖК-платы называют это постоянным током или D / C). При подаче высокого \
@@ -283,18 +283,18 @@
  *  B14 ---> D/C | AO | RS
  * */
 #define STFTCB_DC_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_DC_MODER             GPIOB->MODER |= GPIO_MODER_MODER14_0
-#define	STFTCB_DC_ON                GPIOB->ODR |= GPIO_ODR_OD14
-#define	STFTCB_DC_OFF               GPIOB->ODR &= ~GPIO_ODR_OD14
+#define STFTCB_DC_MODER             GPIOB->MODER |= GPIO_MODER_MODER0_0
+#define	STFTCB_DC_ON                GPIOB->ODR |= GPIO_ODR_OD0
+#define	STFTCB_DC_OFF               GPIOB->ODR &= ~GPIO_ODR_OD0
 
 // SPI_SS(CS)
 /* Выбор микросхемы (некоторые ЖК-дисплеи называют это SS)
  *  B15 ---> SPI_SS(CS)
  * */
-#define STFTCB_CS_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_CS_MODER             GPIOB->MODER |= GPIO_MODER_MODER15_0
-#define	STFTCB_CS_ON                GPIOB->ODR |= GPIO_ODR_OD15
-#define	STFTCB_CS_OFF               GPIOB->ODR &= ~GPIO_ODR_OD15
+#define STFTCB_CS_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN
+#define STFTCB_CS_MODER             GPIOC->MODER |= GPIO_MODER_MODER5_0
+#define	STFTCB_CS_ON                GPIOC->ODR |= GPIO_ODR_OD5
+#define	STFTCB_CS_OFF               GPIOC->ODR &= ~GPIO_ODR_OD5
 
 //// Текст
 /* Возможны случаи когда нет надобности в том, чтобы выводить текст, для этого закомментировать строчку ниже

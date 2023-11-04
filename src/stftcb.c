@@ -44,8 +44,8 @@ static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 #define STP_FLASH_WHILE_BSY()       { while (FLASH->SR & FLASH_SR_BSY){} }
 #define START_ADDRESS   0x0800C000 	//	(FLASH_BASE + 48*1024)
 #define BASE_ADDRESS    0x08010000
-#define ADDRESS_MX0R    ((uint32_t)0x08010000)// + (uint32_t)STFTCB_SIZE)
-#define ADDRESS_MX1R    ((uint32_t)0x08020000)// + (uint32_t)STFTCB_SIZE)// + (uint32_t)(2 * STFTCB_SIZE))
+#define ADDRESS_MX0R    ((uint32_t)0x08020000)// + (uint32_t)STFTCB_SIZE)
+#define ADDRESS_MX1R    ((uint32_t)0x08040000)// + (uint32_t)STFTCB_SIZE)// + (uint32_t)(2 * STFTCB_SIZE))
 
 void stp_flash_init() {
 	//// Конфигурация FLASH
@@ -63,10 +63,11 @@ void stp_flash_init() {
 	
     // 5. PLL Выбран в качестве системных часов \
     // если не работает, убрать макрос.
-    //RCC->CFGR |= RCC_CFGR_SW_1;  //(2 <<  0);
+    //RCC->CFGR |= RCC_CFGR_SW_0;  //(2 <<  0);
 	
     // 6. Ждем пока PLL включится
-	//while ((RCC->CFGR & 0x0F) != 0x0A);
+	for (uint8_t i = 0; i < 15; i++);
+    //while ((RCC->CFGR & 0x0F) != 0x0A);
 }
 
 void stp_flash_unlock() {
@@ -134,6 +135,43 @@ void stp_flash_write_32(uint32_t address, const uint32_t *dataBuffer, uint32_t s
 	stp_flash_write_buffer(address, buffer, (sizeof(uint32_t) * size));
 }
 
+void stp_flash_erase(uint32_t sector) {
+    //// Очистка сектора
+    // 1. Разблокировка памяти для работы с ней
+	stp_flash_unlock();
+
+    // 2. Ждем пока она разблокируется
+	STP_FLASH_WHILE_BSY();
+
+    // 3. Защита от дурака, если передали большое число
+    sector = sector & 0x0F;
+
+    // 4. Очистка сектора
+    FLASH->CR |= FLASH_CR_SER;	// Sector Erase Flag
+    FLASH->CR |= (sector << 3);	// Sector Number to SNB[3:0]
+    FLASH->CR |= FLASH_CR_STRT;	// Sector Erase Start
+
+    // 5. Ждем пока сектор очистится
+    STP_FLASH_WHILE_BSY();
+
+    // 6. Выключаем флаг работы с сектором
+    FLASH->CR &= ~FLASH_CR_SER;
+
+    // 7. Блокируем память
+    stp_flash_lock();
+}
+
+uint32_t stp_flash_sector_size(uint32_t sector) {
+    //// получить какой то адрес сектора, честно хз за чем эта функция (Legacy)
+    if (sector >= 0 && sector <= 3) {
+        return (16 * 1024);
+    } else if (sector == 4) {
+        return (64 * 1024);
+    } else if (sector >= 5 && sector <= 11) {
+        return (128 * 1024);
+    }
+    return 0;
+}
 
 static void stftcb_flash_draw_color(uint32_t address, const uint16_t color, uint32_t i) {
     // 3. Цикл записи
@@ -176,8 +214,10 @@ void STFTCB_init() {
     GPIOD->ODR |= GPIO_ODR_OD12;
 
     stp_flash_init();
-    stp_flash_unlock();
-    STP_FLASH_WHILE_BSY();
+    stp_flash_erase(5);
+    stp_flash_erase(6);
+    //stp_flash_unlock();
+    //STP_FLASH_WHILE_BSY();
         GPIOD->ODR |= GPIO_ODR_OD13;
 
     //STFTCB_memset0();
@@ -463,13 +503,15 @@ void stftcb_DrawFillBackground(uint16_t color) {
     while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
     if (stftcb_array_tx_mxar == 0) {
         stftcb_Draw_FillBackground0(color);
+        stp_flash_erase(5);
         stp_flash_write_16(ADDRESS_MX0R, &stftcb_array_tx_0[0], STFTCB_SIZE);
-        stftcb_Draw_FillBackground0(0x0000);
+        stftcb_Draw_FillBackground0(0xFFFF);
         stp_flash_read_16(ADDRESS_MX0R, &stftcb_array_tx_0[0], STFTCB_SIZE);
     } else {
         stftcb_Draw_FillBackground1(color);
+        stp_flash_erase(6);
         stp_flash_write_16(ADDRESS_MX1R, &stftcb_array_tx_1[0], STFTCB_SIZE);
-        stftcb_Draw_FillBackground1(0x0000);
+        stftcb_Draw_FillBackground1(0xFFFF);
         stp_flash_read_16(ADDRESS_MX1R, &stftcb_array_tx_1[0], STFTCB_SIZE);
     }
 }
