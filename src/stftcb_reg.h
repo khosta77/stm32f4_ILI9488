@@ -14,10 +14,10 @@
  * */
 #define ST7735S__080x160            (0)  // 0.96 // 0x01
 #define ST7789V__240x240            (0)  // 1.3  // 0x02
-#define ST7735___128x160            (0)  // 1.8  // 0x03
+#define ST7735___128x160            (1)  // 1.8  // 0x03
 #define ST7789V3_240x280            (0)  // 1.69 // 0x04
 #define ILI9341__240x320            (0)  // 2.2  // 0x05
-#define ST7789___240x320            (1)  // 2.4  // 0x06
+#define ST7789___240x320            (0)  // 2.4  // 0x06
 #define ILI9488__320x480            (0)  // 3.5  // 0x07
 
 /* STFTCB_DISPLAY_MODEL - Модель дисплея из списка выше ^
@@ -93,15 +93,15 @@
 #define STFTCB_RDIF                 0x0D  // Read Display Image Format
 #define STFTCB_RDSM                 0x0E  // Read Display Signal Mode
 #define STFTCB_RDSDR                0x0F  // Read Display Self-Diagnostic Result
-#define STFTCB_ESM                  0x10  // Enter Sleep Mode
-#define STFTCB_SO                   0x11  // Sleep Out
+#define STFTCB_SLPIN                0x10  // Enter Sleep Mode
+#define STFTCB_SLPOUT               0x11  // Sleep Out
 #define STFTCB_PMO                  0x12  // Partial Mode ON
 #define STFTCB_NDMO                 0x13  // Normal Display Mode ON
 #define STFTCB_DIOFF                0x20  // Display Inversion OFF
 #define STFTCB_DION                 0x21  // Display Inversion ON
 #define STFTCB_GAMMS                0x26  // Gamma Set
-#define STFTCB_DOFF                 0x28  // Display OFF
-#define STFTCB_DON                  0x29  // Display ON
+#define STFTCB_DISPOFF              0x28  // Display OFF
+#define STFTCB_DISPON               0x29  // Display ON
 #define STFTCB_CASET                0x2A  // Column Address Set
 #define STFTCB_RASET                0x2B  // Page Address Set
 #define STFTCB_RAMWR                0x2C  // Memory Write
@@ -272,10 +272,10 @@
 /* Аппаратный сброс (сброс на низком уровне)
  *  B12 ---> RESET | RST | RES 
  * */
-#define STFTCB_RESET_RCC            RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_RESET_MODER          GPIOB->MODER |= GPIO_MODER_MODER12_0
-#define STFTCB_RESET_ON             GPIOB->ODR |= GPIO_ODR_OD12
-#define STFTCB_RESET_OFF            GPIOB->ODR &= ~GPIO_ODR_OD12
+#define STFTCB_RESET_RCC            RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN
+#define STFTCB_RESET_MODER          GPIOC->MODER |= GPIO_MODER_MODER4_0
+#define STFTCB_RESET_ON             GPIOC->ODR |= GPIO_ODR_OD4
+#define STFTCB_RESET_OFF            GPIOC->ODR &= ~GPIO_ODR_OD4
 
 // D/C | AO | RS
 /* Выбор данных/команды. (некоторые ЖК-платы называют это постоянным током или D / C). При подаче высокого \
@@ -283,18 +283,18 @@
  *  B14 ---> D/C | AO | RS
  * */
 #define STFTCB_DC_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_DC_MODER             GPIOB->MODER |= GPIO_MODER_MODER14_0
-#define	STFTCB_DC_ON                GPIOB->ODR |= GPIO_ODR_OD14
-#define	STFTCB_DC_OFF               GPIOB->ODR &= ~GPIO_ODR_OD14
+#define STFTCB_DC_MODER             GPIOB->MODER |= GPIO_MODER_MODER0_0
+#define	STFTCB_DC_ON                GPIOB->ODR |= GPIO_ODR_OD0
+#define	STFTCB_DC_OFF               GPIOB->ODR &= ~GPIO_ODR_OD0
 
 // SPI_SS(CS)
 /* Выбор микросхемы (некоторые ЖК-дисплеи называют это SS)
  *  B15 ---> SPI_SS(CS)
  * */
-#define STFTCB_CS_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN
-#define STFTCB_CS_MODER             GPIOB->MODER |= GPIO_MODER_MODER15_0
-#define	STFTCB_CS_ON                GPIOB->ODR |= GPIO_ODR_OD15
-#define	STFTCB_CS_OFF               GPIOB->ODR &= ~GPIO_ODR_OD15
+#define STFTCB_CS_RCC               RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN
+#define STFTCB_CS_MODER             GPIOC->MODER |= GPIO_MODER_MODER5_0
+#define	STFTCB_CS_ON                GPIOC->ODR |= GPIO_ODR_OD5
+#define	STFTCB_CS_OFF               GPIOC->ODR &= ~GPIO_ODR_OD5
 
 //// Текст
 /* Возможны случаи когда нет надобности в том, чтобы выводить текст, для этого закомментировать строчку ниже
