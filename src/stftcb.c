@@ -1,11 +1,12 @@
 #include "stftcb.h"
 
-uint16_t stftcb_array_tx_0[STFTCB_SIZE];
-uint16_t stftcb_array_tx_1[STFTCB_SIZE];
+uint8_t stftcb_array_tx_0[1024];
+uint8_t stftcb_array_tx_1[1024];
 
 uint8_t stftcb_array_tx_status;
 uint8_t stftcb_array_tx_mxar;
 
+uint16_t count_l = 0x0000;
 static void STFTCB_GPIO_init();
 static void STFTCB_memset0();
 static void STFTCB_DMA_init();
@@ -74,14 +75,14 @@ static void STFTCB_GPIO_init() {
 /** @brief STFTCB_memset_0 - обнуление массива
  * */
 static void STFTCB_memset0() {
-    memset(&stftcb_array_tx_0[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
-    memset(&stftcb_array_tx_1[0], 0x0000, (STFTCB_SIZE * sizeof(uint16_t)));
+    memset(&stftcb_array_tx_0[0], 0x00, (STFTCB_SIZE * sizeof(uint8_t)));
+    memset(&stftcb_array_tx_1[0], 0x00, (STFTCB_SIZE * sizeof(uint8_t)));
 }
 
 static void STFTCB_DMA_init() {
     STFTCB_SPI_DMA_SxCR->M0AR = (uint32_t)&stftcb_array_tx_0[0];
     STFTCB_SPI_DMA_SxCR->M1AR = (uint32_t)&stftcb_array_tx_1[0];
-    STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->NDTR = 256;
 }
 
 static void STFTCB_TFT_init() {
@@ -100,7 +101,7 @@ static void STFTCB_TFT_init() {
     stftcb_sendCmd1byte(STFTCB_COLMODPFS);  //  2: set color mode
     stftcb_sendData1byte(0x55);             //     16-bit color
 #endif
-    stftcb_updateFrame();
+   // stftcb_updateFrame();
 }
 
 /*=========================================================================================================*/
@@ -165,9 +166,11 @@ void stftcb_SetFullAddressWindow() {
  * */
 void stftcb_updateFrame() {
     while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
-    stftcb_SetFullAddressWindow();
+    stftcb_SetAddressWindow(0, count_l, (STFTCB_WIDTH - 1), count_l);
+    ++count_l;
+    //stftcb_SetFullAddressWindow();
 
-    SPI_2byte_mode_on();
+    SPI_1byte_mode_on();
     STFTCB_DC_ON;
     STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
     while ((STFTCB_SPI_DMA_SxCR->CR) & DMA_SxCR_EN){;}
@@ -181,7 +184,7 @@ void stftcb_updateFrame() {
     }
 
     stftcb_array_tx_status = 0x11;
-    STFTCB_SPI_DMA_SxCR->NDTR = STFTCB_SIZE;
+    STFTCB_SPI_DMA_SxCR->NDTR = 256;
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_MINC;
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_EN;
 }
@@ -189,424 +192,6 @@ void stftcb_updateFrame() {
 /*=========================================================================================================*/
 /*                              Функции отрисовки объектов в кадре                                         */
 /*=========================================================================================================*/
-/** @brief stftcb_DrawPixel - отрисовка одного пикселя в заднной точке. Функция работает крайне медленно,
- *                            лучше исполозовать такую конструкцию
- *  for (uint16_t i = 0, I = 0; i < STFTCB_HEIGHT; i++, I += STFTCB_WIDTH) {
- *      for (uint16_t j = 0; j < STFTCB_WIDTH; j += ) {
- *          tft_display[I + j] = colors[color];
- *       }
- *   }
- *
- * */
-void stftcb_DrawPixel(uint16_t y, uint16_t x, uint16_t color) {
-    if (stftcb_array_tx_mxar == 0)
-        STFTCB_POINT(stftcb_array_tx_0, y, x) = color;
-    else
-        STFTCB_POINT(stftcb_array_tx_1, y, x) = color;
-}
-
-/** @brief stftcb_DrawHorizonLine - отрисовка линии по горизонтали
- * */
-uint8_t stftcb_DrawHorizonLine(uint16_t y, uint16_t x0, uint16_t x1, uint16_t color) {
-    if ((x0 > x1) || (x1 < STFTCB_WIDTH) || (y < STFTCB_HEIGHT))
-        return 0xFF;
-
-    const uint16_t Y = y * STFTCB_WIDTH;
-    for (uint16_t x = x0; x < x1; x++)
-        if (stftcb_array_tx_mxar == 0)
-            stftcb_array_tx_0[(Y + x)] = color;
-        else
-            stftcb_array_tx_1[(Y + x)] = color;
-
-    return 0x00;
-}
-
-/** @brief stftcb_DrawHorizonLine - отрисовка линии по вертикали
- * */
-uint8_t stftcb_DrawVerticalLine(uint16_t x, uint16_t y0, uint16_t y1, uint16_t color) {
-    if ((y0 > y1) || (y1 < STFTCB_HEIGHT) || (x < STFTCB_WIDTH))
-        return 0xFF;
-
-    for (uint16_t y = y0, Y = (y0 * STFTCB_WIDTH); y < y1; y++, Y += STFTCB_WIDTH)
-        if (stftcb_array_tx_mxar == 0)
-            stftcb_array_tx_0[(Y + x)] = color;
-        else
-            stftcb_array_tx_1[(Y + x)] = color;
-
-    return 0x00;
-}
-
-/** @brief stftcb_DrawLine - отрисовка линии, по диагонали, с помощью алгоритма Брезенхэма ссылка: \
- *                           https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Алгоритм_Брезенхэма
- * */
-void stftcb_DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
-    const int16_t deltaX = abs(x1 - x0);
-    const int16_t deltaY = abs(y1 - y0);
-    const int16_t signX = (x0 < x1) ? 1 : -1;
-    const int16_t signY = (y0 < y1) ? 1 : -1;
-    int16_t error = deltaX - deltaY;
-    int16_t error2;
-    if (stftcb_array_tx_mxar == 0) {
-        stftcb_DrawLine0(x0, y0, x1, y1, color, deltaX, deltaY, signX, signY, error, error2);
-#if 0
-        STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
-        while (x0 != x1 || y0 != y1) {
-            STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
-            error2 = error * 2;
-            if (error2 > -deltaY) {
-                error -= deltaY;
-                x0 += signX;
-            }
-            if (error2 < deltaX) {
-                error += deltaX;
-                y0 += signY;
-            }
-        }
-#endif
-    } else {
-        stftcb_DrawLine1(x0, y0, x1, y1, color, deltaX, deltaY, signX, signY, error, error2);
-#if 0
-        STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
-        while (x0 != x1 || y0 != y1) {
-            STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
-            error2 = error * 2;
-            if (error2 > -deltaY) {
-                error -= deltaY;
-                x0 += signX;
-            }
-            if (error2 < deltaX) {
-                error += deltaX;
-                y0 += signY;
-            }
-        }
-#endif
-    }
-}
-
-static void stftcb_DrawLine0(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color,
-                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             const int16_t signY, int16_t error, int16_t error2) {
-    STFTCB_POINT(stftcb_array_tx_0, y1, x1) = color;
-    while (x0 != x1 || y0 != y1) {
-        STFTCB_POINT(stftcb_array_tx_0, y0, x0) = color;
-        error2 = error * 2;
-        if (error2 > -deltaY) {
-            error -= deltaY;
-            x0 += signX;
-        }
-        if (error2 < deltaX) {
-            error += deltaX;
-            y0 += signY;
-        }
-    }
-}
-
-static void stftcb_DrawLine1(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color,
-                             const int16_t deltaX, const int16_t deltaY, const int16_t signX,
-                             const int16_t signY, int16_t error, int16_t error2) {
-    STFTCB_POINT(stftcb_array_tx_1, y1, x1) = color;
-    while (x0 != x1 || y0 != y1) {
-        STFTCB_POINT(stftcb_array_tx_1, y0, x0) = color;
-        error2 = error * 2;
-        if (error2 > -deltaY) {
-            error -= deltaY;
-            x0 += signX;
-        }
-        if (error2 < deltaX) {
-            error += deltaX;
-            y0 += signY;
-        }
-    }
-}
-
-static void stftcb_Draw_FillBackground0(uint16_t color) {
-    for (uint32_t i = 0; i < STFTCB_SIZE; i++)
-        stftcb_array_tx_0[i] = color;
-}
-
-static void stftcb_Draw_FillBackground1(uint16_t color) {
-    for (uint32_t i = 0; i < STFTCB_SIZE; i++)
-        stftcb_array_tx_1[i] = color;
-}
-
-/* @brief stftcb_DrawFillBackground - закрашивает в выбранный цвет задний фон
- * */
-void stftcb_DrawFillBackground(uint16_t color) {
-    if (stftcb_array_tx_mxar == 0)
-        stftcb_Draw_FillBackground0(color);
-    else
-        stftcb_Draw_FillBackground1(color);
-}
-
-#define ROTATION_X(x, x0, y, y0, cosa, sina) ((x - x0) * cosa - (y - y0) * sina + x0)
-#define ROTATION_Y(x, x0, y, y0, cosa, sina) ((x - x0) * sina + (y - y0) * cosa + y0)
-
-/** @brief stftcb_DrawNoFillRectangle - отрисовка НЕ закрашенного треугольника, без или с поворотом.
- *    (x0, y0)    (x1, y1)
- *            +--+
- *            |  |
- *            +--+
- *    (x3, y3)    (x2, y2)
- * */
-void stftcb_DrawNoFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color) {
-    const uint16_t deltaX = ((x2 + x0) / 2);
-    const uint16_t deltaY = ((y2 + y0) / 2);
-
-    float Asin = sin((alpha * M_PI / 180));
-    float Acos = cos((alpha * M_PI / 180));
-
-    uint16_t x1 = x2, y1 = y0;
-    uint16_t x3 = x0, y3 = y2;
-
-    // Повернутые кординаты
-    uint16_t x0n = ROTATION_X(x0, deltaX, y0, deltaY, Acos, Asin);
-    uint16_t y0n = ROTATION_Y(x0, deltaX, y0, deltaY, Acos, Asin);
-
-    uint16_t x1n = ROTATION_X(x1, deltaX, y1, deltaY, Acos, Asin);
-    uint16_t y1n = ROTATION_Y(x1, deltaX, y1, deltaY, Acos, Asin);
-
-    uint16_t x2n = ROTATION_X(x2, deltaX, y2, deltaY, Acos, Asin);
-    uint16_t y2n = ROTATION_Y(x2, deltaX, y2, deltaY, Acos, Asin);
-
-    uint16_t x3n = ROTATION_X(x3, deltaX, y3, deltaY, Acos, Asin);
-    uint16_t y3n = ROTATION_Y(x3, deltaX, y3, deltaY, Acos, Asin);
-
-    stftcb_DrawLine(x0n, y0n, x1n, y1n, color);
-    stftcb_DrawLine(x1n, y1n, x2n, y2n, color);
-    stftcb_DrawLine(x2n, y2n, x3n, y3n, color);
-    stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
-}
-
-/** @brief stftcb_DrawFillRectangle - отрисовка Закрашенного треугольника, без или с поворотом.
- *                                    Есть искажение, при наложении фигур
- *    (x0, y0)    (x1, y1)
- *            +--+
- *            |  |
- *            +--+
- *    (x3, y3)    (x2, y2)
- * */
-void stftcb_DrawFillRectangle(uint16_t x0, uint16_t y0, uint16_t x2, uint16_t y2, float alpha, uint16_t color) {
-    //// 0. Отрисовка контура
-    const uint16_t deltaX = ((x2 + x0) / 2);
-    const uint16_t deltaY = ((y2 + y0) / 2);
-
-    float Asin = sin((alpha * M_PI / 180));
-    float Acos = cos((alpha * M_PI / 180));
-
-    uint16_t x1 = x2, y1 = y0;
-    uint16_t x3 = x0, y3 = y2;
-
-    // Повернутые кординаты
-    uint16_t x0n = ROTATION_X(x0, deltaX, y0, deltaY, Acos, Asin);
-    uint16_t y0n = ROTATION_Y(x0, deltaX, y0, deltaY, Acos, Asin);
-
-    uint16_t x1n = ROTATION_X(x1, deltaX, y1, deltaY, Acos, Asin);
-    uint16_t y1n = ROTATION_Y(x1, deltaX, y1, deltaY, Acos, Asin);
-
-    uint16_t x2n = ROTATION_X(x2, deltaX, y2, deltaY, Acos, Asin);
-    uint16_t y2n = ROTATION_Y(x2, deltaX, y2, deltaY, Acos, Asin);
-
-    uint16_t x3n = ROTATION_X(x3, deltaX, y3, deltaY, Acos, Asin);
-    uint16_t y3n = ROTATION_Y(x3, deltaX, y3, deltaY, Acos, Asin);
-
-    stftcb_DrawLine(x0n, y0n, x1n, y1n, color);
-    stftcb_DrawLine(x1n, y1n, x2n, y2n, color);
-    stftcb_DrawLine(x2n, y2n, x3n, y3n, color);
-    stftcb_DrawLine(x3n, y3n, x0n, y0n, color);
-    //// 1. Закраска
-    /** Первый алгоритм
-     * */
-    uint16_t x[4] = {x0n, x1n, x2n, x3n};
-    uint16_t y[4] = {y0n, y1n, y2n, y3n};
-    uint8_t min_i = 0, max_i = 0;
-    for (uint8_t i = 1; i < 4; ++i) {
-        if (y[i] > y[max_i])
-            max_i = i;
-        if (y[i] < y[min_i])
-            min_i = i;
-    }
-
-    uint8_t mrk_back = 0x00, mrk_front = 0x00;
-    if (stftcb_array_tx_mxar == 0) {  // Это ублюдски сделано. Надо как то передалть, но позже
-        for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
-            if (stftcb_array_tx_0[Y] == color) {  // Осуществлеям проверку на определние находимся \
-                                            // ли мы на границе контура
-                if (mrk_back == 0x00) {
-                    if (mrk_front == 0x00) {
-                        mrk_back = 0x11;
-                    }
-                } else {
-                    if (mrk_front == 0x11) {
-                        mrk_back = 0x00;
-                    }
-                }
-            } else {
-                if (mrk_back == 0x11) {
-                    mrk_front = 0x11;
-                    stftcb_array_tx_0[Y] = color;
-                } else {
-                    mrk_front = 0x00;
-                }
-            }
-        }
-    } else {
-        for (uint16_t Y = ((y[min_i] + 1) * STFTCB_WIDTH), Ym = (y[max_i] * STFTCB_WIDTH); Y < Ym; ++Y) {
-            if (stftcb_array_tx_1[Y] == color) {  // Осуществлеям проверку на определние находимся \
-                                            // ли мы на границе контура
-                if (mrk_back == 0x00) {
-                    if (mrk_front == 0x00) {
-                        mrk_back = 0x11;
-                    }
-                } else {
-                    if (mrk_front == 0x11) {
-                        mrk_back = 0x00;
-                    }
-                }
-            } else {
-                if (mrk_back == 0x11) {
-                    mrk_front = 0x11;
-                    stftcb_array_tx_1[Y] = color;
-                } else {
-                    mrk_front = 0x00;
-                }
-            }
-        }
-    }
-}
-
-/** @brief stftcb_DrawNoFillCicle - рисует контур круга
- * */
-void stftcb_DrawNoFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
-    int16_t x = 0;
-    int16_t y = R;
-    int16_t delta = 1 - 2 * R;
-    int16_t error = 0;
-    if (stftcb_array_tx_mxar == 0) {
-        while (y >= x) {
-            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
-            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
-            error = 2 * (delta + y) - 1;
-            if ((delta < 0) && (error <= 0)) {
-                delta += (2 * (++x)) + 1;
-            } else {
-                if ((delta > 0) && (error > 0)) {
-                    delta -= (2 * (--y)) + 1;
-                } else {
-                    delta += 2 * (++x - --y);
-                }
-            }
-        }
-    } else {
-        while (y >= x) {
-            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
-            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
-            error = 2 * (delta + y) - 1;
-            if ((delta < 0) && (error <= 0)) {
-                delta += (2 * (++x)) + 1;
-            } else {
-                if ((delta > 0) && (error > 0)) {
-                    delta -= (2 * (--y)) + 1;
-                } else {
-                    delta += 2 * (++x - --y);
-                }
-            }
-        }
-    }
-}
-
-/** @brief stftcb_DrawFillCicle - закраска с бликами происходит, почему так не понимаю, если отдельно
- *                                выводить, то все нормально
- * */
-void stftcb_DrawFillCicle(int16_t x0, int16_t y0, int16_t R, uint16_t color) {
-    int16_t x = 0;
-    int16_t y = R;
-    int16_t delta = 3 - 2 * y;
-    if (stftcb_array_tx_mxar == 0) {
-        while (x <= y) {
-            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_0[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_0[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_0[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
-            stftcb_array_tx_0[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
-            delta += delta < 0 ? 4 * x + 6 : 4 * (x - y--) + 10;
-            ++x;
-        }
-    } else {
-        while (x <= y) {
-            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 + x)] = color;
-            stftcb_array_tx_1[(y0 + y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_1[(y0 - y) * STFTCB_WIDTH + (x0 - x)] = color;
-            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 + y)] = color;
-            stftcb_array_tx_1[(y0 + x) * STFTCB_WIDTH + (x0 - y)] = color;
-            stftcb_array_tx_1[(y0 - x) * STFTCB_WIDTH + (x0 - y)] = color;
-            delta += delta < 0 ? 4 * x + 6 : 4 * (x - y--) + 10;
-            ++x;
-        }
-    }
-    uint8_t mrk_back = 0x00, mrk_front = 0x00;
-    if (stftcb_array_tx_mxar == 0) {  // Это ублюдски сделано. Надо как то передалть, но позже
-        for (uint16_t Y = ((y0 - R + 1) * STFTCB_WIDTH), Ym = (y0 + R * STFTCB_WIDTH); Y < Ym; ++Y) {
-            if (stftcb_array_tx_0[Y] == color) {  // Осуществлеям проверку на определние находимся \
-                                            // ли мы на границе контура
-                if (mrk_back == 0x00) {
-                    if (mrk_front == 0x00) {
-                        mrk_back = 0x11;
-                    }
-                } else {
-                    if (mrk_front == 0x11) {
-                        mrk_back = 0x00;
-                    }
-                }
-            } else {
-                if (mrk_back == 0x11) {
-                    mrk_front = 0x11;
-                    stftcb_array_tx_0[Y] = color;
-                } else {
-                    mrk_front = 0x00;
-                }
-            }
-        }
-    } else {
-        for (uint16_t Y = ((y0 - R + 1) * STFTCB_WIDTH), Ym = ((y0 + R) * STFTCB_WIDTH); Y < Ym; ++Y) {
-            if (stftcb_array_tx_1[Y] == color) {  // Осуществлеям проверку на определние находимся \
-                                            // ли мы на границе контура
-                if (mrk_back == 0x00) {
-                    if (mrk_front == 0x00) {
-                        mrk_back = 0x11;
-                    }
-                } else {
-                    if (mrk_front == 0x11) {
-                        mrk_back = 0x00;
-                    }
-                }
-            } else {
-                if (mrk_back == 0x11) {
-                    mrk_front = 0x11;
-                    stftcb_array_tx_1[Y] = color;
-                } else {
-                    mrk_front = 0x00;
-                }
-            }
-        }
-    }
-}
 
 #ifdef STFTCB_TEXT
 /*=========================================================================================================*/
