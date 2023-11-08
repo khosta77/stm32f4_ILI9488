@@ -66,8 +66,7 @@ static void SPI_DMA_init() {
     // - DMA_SxCR_TCIE    - Прерывания по завершению передачи
     // // Дополнительные прерывания, не и использую
     // - DMA_SxCR_CIRC    - Режим кольцевого буфера разрешен
-    STFTCB_SPI_DMA_SxCR->CR = (STFTCB_SPI_DMA_SxCR_CH | DMA_SxCR_MINC | DMA_SxCR_DIR_0 |
-                               DMA_SxCR_MSIZE_0 | DMA_SxCR_PSIZE_0 | DMA_SxCR_TCIE);
+    STFTCB_SPI_DMA_SxCR->CR = (STFTCB_SPI_DMA_SxCR_CH | DMA_SxCR_MINC | DMA_SxCR_DIR_0 | DMA_SxCR_TCIE);
 
     STFTCB_SPI_DMA_CTCIF;  // Включаем прерывание после успешной передачи передачи
     STFTCB_SPI_DMA_SxCR->PAR = (uint32_t)&STFTCB_SPI->DR;
