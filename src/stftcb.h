@@ -37,7 +37,7 @@ void stftcb_SetFullAddressWindow();
 void stftcb_updateFrame();
 
 //// Функции отрисовки объектов
-//
+void stftcb_FillBackground(uint16_t color);
 
 //// Вывод текста
 //void printt(uint16_t x0, uint16_t y0, const char *str);
