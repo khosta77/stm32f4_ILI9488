@@ -1,5 +1,17 @@
 #include "stftcb.h"
 
+uint16_t colors[] = {
+    STFTCB_COLOR_BLACK,
+    STFTCB_COLOR_WHITE,
+    STFTCB_COLOR_BLUE,
+    STFTCB_COLOR_RED,
+    STFTCB_COLOR_GREEN,
+    STFTCB_COLOR_MAGENTA,
+    STFTCB_COLOR_YELLOW
+};
+const uint8_t COLORS_SIZE = 7;//(sizeof(colors) / sizeof(colors[0]));
+
+
 /** @brief DMA2_Stream3_IRQHandler - прерывание при завершение передачи данных по SPI
  * */
 void DMA2_Stream3_IRQHandler(void) {
@@ -108,10 +120,10 @@ void DMA_init() {
 }
 
 void USART2_init() {
-    SystemCoreClockUpdate();
+    //SystemCoreClockUpdate();
     GPIO_init();
-    USART_init();
-    DMA_init();
+    //USART_init();
+    //DMA_init();
 }
 
 void init() {
@@ -232,17 +244,67 @@ void message_out() {
     //GPIOD->ODR &= ~GPIO_ODR_OD13;
 }
 
+void rainbow() {
+    static uint16_t color = 0x00;
+    if (color == COLORS_SIZE)
+            color = 0x00;
+    stftcb_FillBackground(colors[color]);
+    for (uint32_t t = 0; t < 0xAFFFF; t++);
+    //stftcb_updateFrame();
+    ++color;
+}
+
 void loop() {
+    rainbow();
+/*
     if (usart2_mrk == 0x0A)
         message_in();
     if (usart2_mrk == 0xA0)
         message_out();
+*/
 }
 
+void System_Clock_Config(void)
+{	
+	
+	// Prescaler Configrations
+	RCC->CFGR 	|= (5 << 10);			// APB1 Prescaler = 4
+	RCC->CFGR 	|= (4 << 13);			// APB2 Prescaler = 2
+
+	RCC->CR 	|= (1 << 16);			// HSE Clock Enable - HSEON
+	while(!(RCC->CR & 0x00020000));		// Wait until HSE Clock Ready - HSERDY
+
+	// PLL Configrations
+	RCC->PLLCFGR = 0;					// Clear all PLLCFGR register
+	RCC->PLLCFGR |=  (8		<<  0);		// PLLM = 8;
+	RCC->PLLCFGR |=  (336 	<<  6);		// PLLN = 336;
+	RCC->PLLCFGR &= ~(3 	<< 16);		// PLLP = 2; // For 2, Write 0
+	RCC->PLLCFGR |=  (1 	<< 22);		// HSE Oscillator clock select as PLL
+	RCC->PLLCFGR |=  (7 	<< 24);		// PLLQ = 7;
+
+	RCC->CR 		|=  (1 		<< 24); // PLL Clock Enable - PLLON
+	while(!(RCC->CR & 0x02000000)); 	// Wait until PLL Clock Ready - PLLRDY
+
+	// Flash Configrations
+	FLASH->ACR = 0;						// Clear all ACR register (Access Control Register)
+	FLASH->ACR 		|= (5 <<  0); 		// Latency - 5 Wait State
+	FLASH->ACR 		|= (1 <<  9);		// Instruction Cache Enable
+	FLASH->ACR 		|= (1 << 10);		// Data Cache Enable
+
+	RCC->CFGR 		|= (2 <<  0);		// PLL Selected as System Clock
+	while((RCC->CFGR & 0x0F) != 0x0A); 	// Wait PLL On
+
+}
+
+
+
 int main(void) {
+    System_Clock_Config();
     init();
     while(1) {
-        loop(); 
+        GPIOD->ODR |= GPIO_ODR_OD12;
+        loop();
+        GPIOD->ODR &= ~GPIO_ODR_OD12;
     }
 }
 
