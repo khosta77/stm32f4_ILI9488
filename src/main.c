@@ -16,7 +16,7 @@ const uint8_t COLORS_SIZE = 7;//(sizeof(colors) / sizeof(colors[0]));
  * */
 void DMA2_Stream3_IRQHandler(void) {
     if (STFTCB_SPI_DMA_TCIF) {  // Прерывания по завершению передачи
-        GPIOD->ODR ^= GPIO_ODR_OD15;
+        //GPIOD->ODR ^= GPIO_ODR_OD15;
         stftcb_array_tx_status = 0x00;
         STFTCB_SPI_DMA_SxCR->CR &= ~DMA_SxCR_EN;
         STFTCB_SPI_DMA_CTCIF; 
@@ -28,7 +28,7 @@ void DMA2_Stream3_IRQHandler(void) {
 #define USART_SIZE 1024
 #define SIZE_CMD 2
 #define CPU_CLOCK SystemCoreClock
-#define MY_BDR 115200
+#define MY_BDR 9600
 #define MYBRR (CPU_CLOCK / (16 * MY_BDR))
 
 void GPIO_init() {
@@ -120,10 +120,10 @@ void DMA_init() {
 }
 
 void USART2_init() {
-    //SystemCoreClockUpdate();
+    SystemCoreClockUpdate();
     GPIO_init();
-    //USART_init();
-    //DMA_init();
+    USART_init();
+    DMA_init();
 }
 
 void init() {
@@ -153,8 +153,8 @@ void send_display_info() {
 }
 
 void send_display_range() {
-    uint16_t x = 240;
-    uint16_t y = 360;
+    uint16_t x = STFTCB_WIDTH;
+    uint16_t y = STFTCB_HEIGHT;
     uint8_t range[4] = { (uint8_t)((x >> 8) & 0xFF), (uint8_t)(x & 0xFF),
                          (uint8_t)((y >> 8) & 0xFF), (uint8_t)(y & 0xFF)};
     usart2_tx_array[0] = range[1];
@@ -169,10 +169,10 @@ void send_display_range() {
 
 void mymemcpy() {
     if (stftcb_array_tx_mxar == 0) {
-        for (uint16_t i = 0; i < 256; i++)
+        for (uint16_t i = 0; i < (3 * STFTCB_WIDTH); i++)
             stftcb_array_tx_0[i] = usart2_rx_array[i];
     } else {
-        for (uint16_t i = 0; i < 256; i++)
+        for (uint16_t i = 0; i < (3 * STFTCB_WIDTH); i++)
             stftcb_array_tx_1[i] = usart2_rx_array[i];
     }
 }
@@ -190,7 +190,7 @@ void print_h_line() {
             DMA1_Stream6->CR |= DMA_SxCR_MINC;
             DMA1_Stream6->M0AR = (uint32_t)&usart2_tx_array[0];
 
-            DMA1_Stream5->NDTR = 256;
+            DMA1_Stream5->NDTR = (3 * STFTCB_WIDTH);
             DMA1_Stream5->CR |= DMA_SxCR_MINC;
             DMA1_Stream5->M0AR = (uint32_t)&usart2_rx_array[0];
     
@@ -204,6 +204,7 @@ void print_h_line() {
 }
 
 void message_in() {
+    GPIOD->ODR |= GPIO_ODR_OD14;
     cmd_check();
     uint8_t cmd = usart2_rx_array[0];
     switch (cmd) {
@@ -248,25 +249,27 @@ void rainbow() {
     static uint16_t color = 0x00;
     if (color == COLORS_SIZE)
             color = 0x00;
+    GPIOD->ODR |= GPIO_ODR_OD12;
     stftcb_FillBackground(colors[color]);
-    for (uint32_t t = 0; t < 0xAFFFF; t++);
+    GPIOD->ODR &= ~GPIO_ODR_OD12;
+
+   // for (uint32_t t = 0; t < 0xAFFFF; t++);
     //stftcb_updateFrame();
     ++color;
 }
 
 void loop() {
+#if 0
     rainbow();
-/*
+#else
     if (usart2_mrk == 0x0A)
         message_in();
     if (usart2_mrk == 0xA0)
         message_out();
-*/
+#endif
 }
 
-void System_Clock_Config(void)
-{	
-	
+void System_Clock_Config(void) {	
 	// Prescaler Configrations
 	RCC->CFGR 	|= (5 << 10);			// APB1 Prescaler = 4
 	RCC->CFGR 	|= (4 << 13);			// APB2 Prescaler = 2
@@ -293,7 +296,6 @@ void System_Clock_Config(void)
 
 	RCC->CFGR 		|= (2 <<  0);		// PLL Selected as System Clock
 	while((RCC->CFGR & 0x0F) != 0x0A); 	// Wait PLL On
-
 }
 
 
@@ -301,10 +303,11 @@ void System_Clock_Config(void)
 int main(void) {
     System_Clock_Config();
     init();
+    usart2_tx_array[0] = usart2_tx_array[1] = 0x11;
     while(1) {
-        GPIOD->ODR |= GPIO_ODR_OD12;
+        //GPIOD->ODR |= GPIO_ODR_OD12;
         loop();
-        GPIOD->ODR &= ~GPIO_ODR_OD12;
+        //GPIOD->ODR &= ~GPIO_ODR_OD12;
     }
 }
 
