@@ -8,7 +8,7 @@ uint8_t stftcb_array_tx_mxar;
 
 uint16_t count_l = 0x0000;
 
-static const uint16_t STFTCB_ARRAY_SIZE = (3 * STFTCB_WIDTH);
+const uint16_t STFTCB_ARRAY_SIZE = (3 * STFTCB_WIDTH);
 
 static void STFTCB_GPIO_init();
 static void STFTCB_memset0();
@@ -254,8 +254,8 @@ void stftcb_updateFrame() {
     while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
     stftcb_SetAddressWindow(0, count_l, STFTCB_WIDTH, count_l);
     ++count_l;
-    if (count_l == STFTCB_HEIGHT)
-        count_l = 0;
+    //if (count_l == STFTCB_HEIGHT)
+      //  count_l = 0;
     //stftcb_SetFullAddressWindow();
 
     SPI_1byte_mode_on();
@@ -302,12 +302,14 @@ static void stftcb_fullpoint8(const uint16_t i, const uint8_t r, const uint8_t g
 void stftcb_FillBackground(uint16_t color) {
     const uint8_t rgb[3] = { (uint8_t)(((color & 0xF800) >> 11) << 3), 
                              (uint8_t)(((color & 0x07E0) >> 5) << 2), (uint8_t)((color & 0x001F) << 3)};
+    count_l = 0;
 
     for (uint16_t i = 0; i < STFTCB_HEIGHT; ++i) {
         for (uint16_t j = 0; j < STFTCB_ARRAY_SIZE; j += 3)
             stftcb_fullpoint8(j, rgb[0], rgb[1], rgb[2]);
         //for (uint32_t t = 0; t < 0xFFF; t++);
         stftcb_updateFrame();
+        ++count_l;
     }
 }
 
