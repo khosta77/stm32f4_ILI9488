@@ -218,6 +218,14 @@ void stftcb_sendCmd(uint8_t address, uint8_t *data, uint16_t size) {
     for (uint16_t i = 0; i < size; ++i)
         stftcb_sendData1byte(data[i]);
 }
+
+void stftcb_readId() {
+    stftcb_sendCmd1byte(0x04);
+    STFTCB_DC_ON;
+    uint8_t arr[4] = {0x00, 0x00, 0x00, 0x00};
+    for (uint8_t i = 0; i < 4; i++)
+        SPI_receiving(&arr[i]);
+}
 /*=========================================================================================================*/
 /*                      Функции объявления области выделения кадра                                         */
 /*=========================================================================================================*/

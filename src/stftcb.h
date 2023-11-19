@@ -28,6 +28,7 @@ void stftcb_sendData2byte(uint16_t dt);
 
 // Массив с настройкой
 void stftcb_sendCmd(uint8_t address, uint8_t *data, uint16_t size);
+void stftcb_readId();
 
 //// Работа с кадром
 // Задача размеров окна

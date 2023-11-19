@@ -37,11 +37,11 @@ static void SPI_GPIO_init() {
     STFTCB_SPI_GPIO_SCK_OSPDR;
     STFTCB_SPI_GPIO_SCK_AFR;
 
-//    STFTCB_SPI_GPIO_MISO_RCC;
-//    STFTCB_SPI_GPIO_MISO_MODER;
-//    STFTCB_SPI_GPIO_MISO_PUPDR;
-//    STFTCB_SPI_GPIO_MISO_OSPDR;
-//    STFTCB_SPI_GPIO_MISO_AFR;
+    STFTCB_SPI_GPIO_MISO_RCC;
+    STFTCB_SPI_GPIO_MISO_MODER;
+    STFTCB_SPI_GPIO_MISO_PUPDR;
+    STFTCB_SPI_GPIO_MISO_OSPDR;
+    STFTCB_SPI_GPIO_MISO_AFR;
 
     STFTCB_SPI_GPIO_MOSI_RCC;
     STFTCB_SPI_GPIO_MOSI_MODER;
@@ -89,6 +89,12 @@ void SPI_2byte_mode_on() {
 void SPI_transmit(uint16_t dt) {
     while(STFTCB_SPI->SR & SPI_SR_BSY);  // Ждем, пока не освободится буфер передатчика
     STFTCB_SPI->DR = dt;                 // Заполняем буфер передатчика
+}
+
+void SPI_receiving(uint8_t *dt) {
+    STFTCB_SPI->DR = 0x00;
+    while(!(STFTCB_SPI->SR & SPI_SR_RXNE));  // Ждем, пока не освободится буфер передатчика
+    *dt = STFTCB_SPI->DR;                 // Читаем буфер передатчика
 }
 
 
