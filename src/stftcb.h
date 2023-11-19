@@ -12,6 +12,7 @@ extern uint8_t stftcb_array_tx_status;
 extern uint8_t stftcb_array_tx_mxar;
 
 extern uint16_t count_l;
+extern const uint16_t STFTCB_ARRAY_SIZE;
 
 /// Функция инициализации
 void STFTCB_init();
