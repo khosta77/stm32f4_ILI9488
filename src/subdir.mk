@@ -7,19 +7,25 @@ C_SRCS += \
 ./src/main.c \
 ./src/stftcb.c \
 ./src/stftcb_spi.c \
-./src/stftcb_font.c
+./src/stftcb_font.c \
+./src/menu.c \
+./src/usart2.c
 
 C_DEPS += \
 ./src/main.d \
 ./src/stftcb.d \
 ./src/stftcb_spi.d \
-./src/stftcb_font.d
+./src/stftcb_font.d \
+./src/menu.d \
+./src/usart2.d
 
 OBJS += \
 ./src/main.o \
 ./src/stftcb.o \
 ./src/stftcb_spi.o \
-./src/stftcb_font.o
+./src/stftcb_font.o \
+./src/menu.o \
+./src/usart2.o
 
 
 # Each subdirectory must supply rules for building sources it contributes
