@@ -13,7 +13,7 @@ uint8_t nop() {
 /*                                      MENU_01_SEND_DISPLAY_INFO                                          */
 /*=========================================================================================================*/
 uint8_t send_display_info() {
-    char disinfo[] = "ST7735 128x160 RGB565;ILI9341-240x320-RGB565";
+    char disinfo[] = "ILI9488-320x480-RGB666";
     memcpy(&usart2_tx_array[0], disinfo, strlen(disinfo) + 1);
     usart2_mrk = 0x00;
     DMA1_Stream6->NDTR = 128;
