@@ -14,11 +14,11 @@
  * */
 #define ST7735S__080x160            (0)  // 0.96 // 0x01
 #define ST7789V__240x240            (0)  // 1.3  // 0x02
-#define ST7735___128x160            (0)  // 1.8  // 0x03
+#define ST7735___128x160            (1)  // 1.8  // 0x03
 #define ST7789V3_240x280            (0)  // 1.69 // 0x04
 #define ILI9341__240x320            (0)  // 2.2  // 0x05
 #define ST7789___240x320            (0)  // 2.4  // 0x06
-#define ILI9488__320x480            (1)  // 3.5  // 0x07
+#define ILI9488__320x480            (0)  // 3.5  // 0x07
 
 /* STFTCB_DISPLAY_MODEL - Модель дисплея из списка выше ^
  * STFTCB_ILIST_DEVICE - 0x01 - ILI; 0x00 ST
@@ -26,36 +26,43 @@
 #if   ST7735S__080x160
   #define STFTCB_HEIGHT             160   // Y
   #define STFTCB_WIDTH              80    // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x01
   #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7789V__240x240
   #define STFTCB_HEIGHT             240   // Y
   #define STFTCB_WIDTH              240   // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x02
   #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7735___128x160
   #define STFTCB_HEIGHT             160   // Y
   #define STFTCB_WIDTH              128   // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x03
   #define STFTCB_ILIST_DEVICE       0x00
 #elif ST7789V3_240x280
   #define STFTCB_HEIGHT             280   // Y
   #define STFTCB_WIDTH              240   // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x04
   #define STFTCB_ILIST_DEVICE       0x00
 #elif ILI9341__240x320
   #define STFTCB_HEIGHT             320   // Y
   #define STFTCB_WIDTH              240   // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x05
   #define STFTCB_ILIST_DEVICE       0x01
 #elif ST7789___240x320
   #define STFTCB_HEIGHT             320   // Y
   #define STFTCB_WIDTH              240   // X
+  #define STFTCB_COLOR_MODE         2
   #define STFTCB_DISPLAY_MODEL      0x06
   #define STFTCB_ILIST_DEVICE       0x00
 #elif ILI9488__320x480
   #define STFTCB_HEIGHT             480   // Y
   #define STFTCB_WIDTH              320   // X
+  #define STFTCB_COLOR_MODE         3
   #define STFTCB_DISPLAY_MODEL      0x07
   #define STFTCB_ILIST_DEVICE       0x01
 #endif
