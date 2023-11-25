@@ -40,11 +40,12 @@ void init() {
 
 void loop() {
 #if 1
-
     if (usart2_mrk == USART_RX_ACTIVE)
         message_in();
     if (usart2_mrk == USART_TX_ACTIVE)
         message_out();
+#elif 
+    rainbows();
 #else
     for (uint16_t i = 0; i < 1000; i++)
         usart2_tx_array[i] = i;
