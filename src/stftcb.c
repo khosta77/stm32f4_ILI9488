@@ -8,10 +8,9 @@ uint8_t stftcb_array_tx_mxar;
 
 uint16_t count_l = 0x0000;
 
-const uint16_t STFTCB_ARRAY_SIZE = (3 * STFTCB_WIDTH);
+const uint16_t STFTCB_ARRAY_SIZE = (STFTCB_COLOR_MODE * STFTCB_WIDTH);
 
 static void STFTCB_GPIO_init();
-static void STFTCB_memset0();
 static void STFTCB_DMA_init();
 static void STFTCB_TFT_init();
 
@@ -55,11 +54,8 @@ void STFTCB_init() {
     stftcb_array_tx_mxar = 0x00;
     SPI_init();
     STFTCB_GPIO_init();
-
-    STFTCB_memset0();
     STFTCB_DMA_init();
     STFTCB_TFT_init();
-
 }
 
 /** @brief STFTCB_GPIO_init - инициализация GPIO для различных команд
@@ -75,13 +71,6 @@ static void STFTCB_GPIO_init() {
     STFTCB_CS_MODER;
 }
 
-/** @brief STFTCB_memset_0 - обнуление массива
- * */
-static void STFTCB_memset0() {  // это приводило к ошибке памяти.
-    //memset(&stftcb_array_tx_0[0], 0x00, (STFTCB_SIZE * sizeof(uint8_t)));
-    //memset(&stftcb_array_tx_1[0], 0x00, (STFTCB_SIZE * sizeof(uint8_t)));
-}
-
 static void STFTCB_DMA_init() {
     STFTCB_SPI_DMA_SxCR->M0AR = (uint32_t)&stftcb_array_tx_0[0];
     STFTCB_SPI_DMA_SxCR->M1AR = (uint32_t)&stftcb_array_tx_1[0];
@@ -94,102 +83,20 @@ static void STFTCB_TFT_init() {
     STFTCB_DELAY(7);
     STFTCB_RESET_ON;
 
-#if 1
-    stftcb_sendCmd1byte(STFTCB_SOFTRES);    //  0: Software reset
+    stftcb_sendCmd1byte(STFTCB_SOFTRES);    // 0: Софтверный сброс
     STFTCB_DELAY(150000);
-    
-#if 1  // ILI9488
-    //stftcb_sendCmd1byte(STFTCB_DION);
-#if 0
-    stftcb_sendCmd1byte(0xE0);
-	stftcb_sendData1byte(0x00);
-	stftcb_sendData1byte(0x03);
-	stftcb_sendData1byte(0x09);
-	stftcb_sendData1byte(0x08);
-	stftcb_sendData1byte(0x16);
-	stftcb_sendData1byte(0x0A);
-	stftcb_sendData1byte(0x3F);
-	stftcb_sendData1byte(0x78);
-	stftcb_sendData1byte(0x4C);
-	stftcb_sendData1byte(0x09);
-	stftcb_sendData1byte(0x0A);
-	stftcb_sendData1byte(0x08);
-	stftcb_sendData1byte(0x16);
-	stftcb_sendData1byte(0x1A);
-	stftcb_sendData1byte(0x0F);
 
-	stftcb_sendCmd1byte(0XE1);
-	stftcb_sendData1byte(0x00);
-	stftcb_sendData1byte(0x16);
-	stftcb_sendData1byte(0x19);
-	stftcb_sendData1byte(0x03);
-	stftcb_sendData1byte(0x0F);
-	stftcb_sendData1byte(0x05);
-	stftcb_sendData1byte(0x32);
-	stftcb_sendData1byte(0x45);
-	stftcb_sendData1byte(0x46);
-	stftcb_sendData1byte(0x04);
-	stftcb_sendData1byte(0x0E);
-	stftcb_sendData1byte(0x0D);
-	stftcb_sendData1byte(0x35);
-	stftcb_sendData1byte(0x37);
-	stftcb_sendData1byte(0x0F);
+	stftcb_sendCmd1byte(0x3A);              // 1: Формат пискеля
+#if (STFTCB_COLOR_MODE == 2)
+	stftcb_sendData1byte(0x55);             // 16-bit
+#else
+	stftcb_sendData1byte(0x66);             // 18-bit
 #endif
-#if 0
-	stftcb_sendCmd1byte(0XC0); //Power Control 1
-	stftcb_sendData1byte(0x17); //Vreg1out
-	stftcb_sendData1byte(0x15); //Verg2out
-
-	stftcb_sendCmd1byte(0xC1); //Power Control 2
-	stftcb_sendData1byte(0x41); //VGH,VGL
-
-	stftcb_sendCmd1byte(0xC5); //Power Control 3
-	stftcb_sendData1byte(0x00);
-	stftcb_sendData1byte(0x12); //Vcom
-	stftcb_sendData1byte(0x80);
-
-	stftcb_sendCmd1byte(0x36); //Memory Access
-	stftcb_sendData1byte(0x48);
-#endif
-	stftcb_sendCmd1byte(0x3A); // Interface Pixel Format
-	stftcb_sendData1byte(0x66); //18 bit
-#if 0
-	stftcb_sendCmd1byte(0XB0); // Interface Mode Control ПМРППРРТПОРО
-	stftcb_sendData1byte(0x80); //SDO NOT USE
-
-    stftcb_sendCmd1byte(0xB1); //Frame rate
-	stftcb_sendData1byte(0xA0); //60Hz
-
-	stftcb_sendCmd1byte(0xB4); //Display Inversion Control
-	stftcb_sendData1byte(0x02); //2-dot
-
-	stftcb_sendCmd1byte(0XB6); //Display Function Control  RGB/MCU Interface Control
-
-	stftcb_sendCmd1byte(0x02); //MCU
-	stftcb_sendData1byte(0x02); //Source,Gate scan dieection
-
-	stftcb_sendCmd1byte(0XE9); // Set Image Functio
-	stftcb_sendData1byte(0x00); // Disable 24 bit data
-
-	stftcb_sendCmd1byte(0xF7); // Adjust Control
-	stftcb_sendData1byte(0xA9);
-	stftcb_sendData1byte(0x51);
-	stftcb_sendData1byte(0x2C);
-	stftcb_sendData1byte(0x82); // D7 stream, loose
-#endif
-#endif
-    stftcb_sendCmd1byte(STFTCB_SLPOUT);     //  1: Out of sleep mode
+    stftcb_sendCmd1byte(STFTCB_SLPOUT);     // 2: Выход из спящего режима
     STFTCB_DELAY(500);
-    stftcb_sendCmd1byte(STFTCB_DISPON);
+    stftcb_sendCmd1byte(STFTCB_DISPON);     // 3: Включение дисплея
     STFTCB_DELAY(100);
-//    stftcb_sendCmd1byte(STFTCB_COLMODPFS);  //  2: set color mode
-//    stftcb_sendData1byte(0x55);             //     16-bit color
-//    stftcb_sendCmd1byte(0xE9); // Set Image Functio
-//	stftcb_sendData1byte(0x00); // Disable 24 bit data
-#endif
-   // stftcb_updateFrame();
 }
-
 /*=========================================================================================================*/
 /*                              Функции отправки данных на дисплей                                         */
 /*=========================================================================================================*/
@@ -217,14 +124,6 @@ void stftcb_sendCmd(uint8_t address, uint8_t *data, uint16_t size) {
     stftcb_sendCmd1byte(address);
     for (uint16_t i = 0; i < size; ++i)
         stftcb_sendData1byte(data[i]);
-}
-
-void stftcb_readId() {
-    stftcb_sendCmd1byte(0x04);
-    STFTCB_DC_ON;
-    uint8_t arr[4] = {0x00, 0x00, 0x00, 0x00};
-    for (uint8_t i = 0; i < 4; i++)
-        SPI_receiving(&arr[i]);
 }
 /*=========================================================================================================*/
 /*                      Функции объявления области выделения кадра                                         */
@@ -262,9 +161,6 @@ void stftcb_updateFrame() {
     while (stftcb_array_tx_status != 0x00) {;}  // Ждем пока предыдущая передача не закончится
     stftcb_SetAddressWindow(0, count_l, STFTCB_WIDTH, count_l);
     ++count_l;
-    //if (count_l == STFTCB_HEIGHT)
-      //  count_l = 0;
-    //stftcb_SetFullAddressWindow();
 
     SPI_1byte_mode_on();
     STFTCB_DC_ON;
@@ -284,10 +180,10 @@ void stftcb_updateFrame() {
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_MINC;
     STFTCB_SPI_DMA_SxCR->CR |= DMA_SxCR_EN;
 }
-
 /*=========================================================================================================*/
 /*                              Функции отрисовки объектов в кадре                                         */
 /*=========================================================================================================*/
+#if (STFTCB_COLOR_MODE == 3)
 static void stftcb_fullpoint8_0(const uint16_t i, const uint8_t r, const uint8_t g, const uint8_t b) {
     stftcb_array_tx_0[i]       = r;
     stftcb_array_tx_0[(i + 1)] = g;
@@ -306,18 +202,44 @@ static void stftcb_fullpoint8(const uint16_t i, const uint8_t r, const uint8_t g
     else
         stftcb_fullpoint8_1(i, r, g, b);
 }
+#else
+static void stftcb_fullpoint8_0(const uint16_t i, const uint8_t lc, const uint8_t rc) {
+    stftcb_array_tx_0[i]       = lc;
+    stftcb_array_tx_0[(i + 1)] = rc;
+}
+
+static void stftcb_fullpoint8_1(const uint16_t i, const uint8_t lc, const uint8_t rc) {
+    stftcb_array_tx_1[i]       = lc;
+    stftcb_array_tx_1[(i + 1)] = rc;
+}
+
+static void stftcb_fullpoint8(const uint16_t i, const uint8_t lc, const uint8_t rc) {
+    if (stftcb_array_tx_mxar == 0)
+        stftcb_fullpoint8_0(i, lc, rc);
+    else
+        stftcb_fullpoint8_1(i, lc, rc);
+}
+#endif
 
 void stftcb_FillBackground(uint16_t color) {
+#if (STFTCB_COLOR_MODE == 3)
     const uint8_t rgb[3] = { (uint8_t)(((color & 0xF800) >> 11) << 3), 
                              (uint8_t)(((color & 0x07E0) >> 5) << 2), (uint8_t)((color & 0x001F) << 3)};
+#else
+    const uint8_t clr[2] = { (uint8_t)((color & 0xFF00) >> 8), (uint8_t)((color & 0x00FF))};
+#endif
     count_l = 0;
 
     for (uint16_t i = 0; i < STFTCB_HEIGHT; ++i) {
-        for (uint16_t j = 0; j < STFTCB_ARRAY_SIZE; j += 3)
+#if (STFTCB_COLOR_MODE == 3)
+        for (uint16_t j = 0; j < STFTCB_ARRAY_SIZE; j += 3) {
             stftcb_fullpoint8(j, rgb[0], rgb[1], rgb[2]);
-        //for (uint32_t t = 0; t < 0xFFF; t++);
+#else
+        for (uint16_t j = 0; j < STFTCB_ARRAY_SIZE; j += 2) {
+            stftcb_fullpoint8(j, clr[0], clr[1]);
+#endif
+        }
         stftcb_updateFrame();
-        ++count_l;
     }
 }
 
